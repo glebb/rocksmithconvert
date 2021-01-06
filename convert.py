@@ -1,5 +1,6 @@
 import os
 import json
+import sys
 
 from psarc import PSARC
 
@@ -38,7 +39,13 @@ def convert(filename, output_directory):
 
         new_content[_convert(path, mac2pc)] = data
 
-    with open(outname, 'wb') as fh:
+    head, tail = os.path.split(outname)
+    outname2 = output_directory + '/' + tail
+    with open(outname2, 'wb') as fh:
         PSARC().build_stream(new_content, fh)
 
-convert('ACDC_Big-Gun_v2_p.psarc')
+if __name__ == "__main__":
+    if len(sys.argv) != 3 or not os.path.isfile(sys.argv[1]) or not os.path.isdir(sys.argv[2]):
+        print('Give filename and existing output directory as arguments')
+        sys.exit()
+    convert(sys.argv[1], sys.argv[2])
