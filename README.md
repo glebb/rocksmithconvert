@@ -14,7 +14,10 @@ files that are already in mac format (_m.psarc) to destination folder (./convert
 ### Requirements ###
 * Python 3
 * pyinstaller (https://pypi.org/project/pyinstaller/)
+* construct
+* pycrypto (use easy_install, pip3 might have problems with High Sierra)
 * Platypus (https://sveinbjorn.org/platypus)
+* pyrocksmith dependencies?
 
 ### Making convert.py as standalone executable ###
 Running `pyinstaller --onefile ./convert.py` creates a convert executable under .dist/.
