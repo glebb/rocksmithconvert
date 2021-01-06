@@ -14,8 +14,6 @@ if (($#>0)) then
                 export dir="$(dirname "${f}")"  
                 mkdir -p "${dir}/convert" 
                 cp "$f" "${dir}/convert/"
-        else
-            continue
         fi
         ((counter=counter+step))
         echo "PROGRESS:$counter"

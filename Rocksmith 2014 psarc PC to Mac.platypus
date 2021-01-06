@@ -11,7 +11,9 @@
 	<key>Author</key>
 	<string>bodhi</string>
 	<key>BundledFiles</key>
-	<array/>
+	<array>
+		<string>/Users/bodhi/src/rocksmithconvert/dist/convert</string>
+	</array>
 	<key>Creator</key>
 	<string>Platypus-5.3</string>
 	<key>DeclareService</key>
@@ -53,7 +55,7 @@
 	<key>ScriptArgs</key>
 	<array/>
 	<key>ScriptPath</key>
-	<string>/Users/bodhi/src/rocksmith/Script.sh</string>
+	<string>/Users/bodhi/src/rocksmithconvert/Script.sh</string>
 	<key>StatusItemDisplayType</key>
 	<string>Text</string>
 	<key>StatusItemIcon</key>
