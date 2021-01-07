@@ -31,7 +31,7 @@
 	<key>IconPath</key>
 	<string>/Applications/Platypus.app/Contents/Resources/PlatypusDefault.icns</string>
 	<key>Identifier</key>
-	<string>org.bodhi.Rocksmith2014psarcPCtoMac</string>
+	<string>org.bodhi.Rocksmith2014CDLCconvertpcmac</string>
 	<key>InterfaceType</key>
 	<string>Progress Bar</string>
 	<key>InterpreterArgs</key>
@@ -39,7 +39,7 @@
 	<key>InterpreterPath</key>
 	<string>/bin/zsh</string>
 	<key>Name</key>
-	<string>Rocksmith 2014 psarc PC to Mac</string>
+	<string>Rocksmith 2014 CDLC convert pc mac</string>
 	<key>NibPath</key>
 	<string>/usr/local/share/platypus/MainMenu.nib</string>
 	<key>OptimizeApplication</key>
@@ -55,7 +55,7 @@
 	<key>ScriptArgs</key>
 	<array/>
 	<key>ScriptPath</key>
-	<string>/Users/bodhi/src/rocksmithconvert/Script.sh</string>
+	<string>/Users/bodhi/src/rocksmithconvert/platypus/Script.sh</string>
 	<key>StatusItemDisplayType</key>
 	<string>Text</string>
 	<key>StatusItemIcon</key>
@@ -253,6 +253,6 @@
 		<string>public.folder</string>
 	</array>
 	<key>Version</key>
-	<string>1.0</string>
+	<string>1.02</string>
 </dict>
 </plist>

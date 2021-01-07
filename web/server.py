@@ -1,7 +1,7 @@
 import os
 import os.path
 import sys
-sys.path.append(os.getcwd() + '/..')
+sys.path.append(os.getcwd() + '/../src')
 
 import cherrypy
 from cherrypy.lib import static
