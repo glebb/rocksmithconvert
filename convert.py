@@ -43,6 +43,7 @@ def convert(filename, output_directory):
     outname2 = output_directory + '/' + tail
     with open(outname2, 'wb') as fh:
         PSARC().build_stream(new_content, fh)
+    return outname2
 
 if __name__ == "__main__":
     if len(sys.argv) != 3 or not os.path.isfile(sys.argv[1]) or not os.path.isdir(sys.argv[2]):
