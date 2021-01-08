@@ -1,6 +1,8 @@
 import os
 import os.path
 import sys
+import pathlib
+
 sys.path.append(os.getcwd() + '/../src')
 
 import cherrypy
@@ -31,8 +33,7 @@ def get_random_string(length):
 class FileConvert(object):
     @cherrypy.tools.register('on_end_request')
     def cleanup():
-        print('cleanup: ' + cherrypy.request.filename)
-        if cherrypy.request.filename:
+        if hasattr(cherrypy.request, 'filename'):
             shutil.rmtree(cherrypy.request.filename)
             cherrypy.request.filename = None
 
@@ -51,6 +52,8 @@ class FileConvert(object):
     @cherrypy.expose
     @cherrypy.tools.cleanup()
     def upload(self, ufile):
+        if pathlib.Path(ufile.filename).suffix != '.psarc':
+            return "provide valid .psarc file"
         random = get_random_string(8)
         upload_path = os.path.normpath('/tmp/' + random)
         os.mkdir(upload_path)
