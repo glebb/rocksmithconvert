@@ -24,7 +24,7 @@ Include this file in Platypus bundle so the script can access it.
 Rocksmith 2014 CDLC convert pc mac platypus profile and make sure you have "convert" executable included in the bundle. Also make sure the script points to the provided Script.sh. Then just create the app.
 
 ## Download ##
-Readymade package (use at your own risk): https://drive.google.com/drive/folders/1jzGLNy7oisBjsHkzJIMMf9E4V_RBXQ8I?usp=sharing
+Readymade package for OSX 10.13 and newer: https://drive.google.com/drive/folders/1jzGLNy7oisBjsHkzJIMMf9E4V_RBXQ8I?usp=sharing
 
 * Download the package
 * Unzip by double clicking the file (if needed, e.g. Safari does this automatically)
