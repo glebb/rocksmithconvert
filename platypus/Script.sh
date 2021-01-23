@@ -1,33 +1,21 @@
-#!/bin/zsh
-if (($#>0)) then
-    let "progress_step = 100 / $#"
-    let "increment_step = $# / 100"
-    ((progress_bar=0))
-    ((counter=0))
-    for f in "$@"
+#!/bin/sh
+export LC_NUMERIC="en_US.UTF-8"
+if (($#>0)) 
+then
+    progress=0
+    psarc_files=()
+    for f in "$@"; do if [[ $f == *"_m.psarc"* ]] || [[ $f == *"_p.psarc"* ]]; then psarc_files+=("${f}"); fi; done;
+    for f in ${psarc_files[@]}
     do
-        export filename="$(basename "${f}")"
+        filename="$(basename "${f}")"
         echo "Processing $filename"
-        if [[ $f == *"_p.psarc"* ]]; then
-            export dir="$(dirname "${f}")/converted_for_mac"
-            mkdir -p $dir
-            ./convert "$f" "${dir}"
-        elif [[ $f == *"_m.psarc"* ]]; then
-            export dir="$(dirname "${f}")/converted_for_pc"
-            mkdir -p $dir
-            ./convert "$f" "${dir}"
-        fi
-        if [[ $progress_step -eq 0 ]] then
-            if [[ $counter -eq $increment_step ]] then
-                ((progress_bar=progress_bar+1))
-                ((counter=0))
-            else
-                ((counter=counter+1))
-            fi
-        else
-            ((progress_bar=progress_bar+progress_step))
-        fi
-        echo "PROGRESS:$progress_bar"
+        convert_dir="$(dirname "${f}")/converted_for"
+        if [[ $f == *"_m.psarc"* ]]; then convert_dir+="_pc"; else convert_dir+="_mac"; fi;
+        mkdir -p "${convert_dir}"
+        ./convert "$f" "${convert_dir}"
+        progress="$(bc -l <<<"$progress+(100.0/${#psarc_files[@]})")"
+        rounded_progress="$(printf '%.0f' $progress)"
+        echo "PROGRESS:$rounded_progress"
     done
     echo "PROGRESS:100"
     echo "All Done!"
