@@ -8,20 +8,19 @@ bundle everything to a nice and clean standalone osx app,
 which can be used to do mass conversion of files.
 
 Conversion always creates a new folder at the same location as the original file. The folder
-contains the converted file(s).
+contains the converted file(s). If file exists, conversion is skipped.
+For mac conversions the new folder is 'converted_for_mac' and for pc 'converted_for_pc'.
 
-If converted file is not generated, check that the original filename does not contain
-special characters.
 
 ## Building ##
 ### Requirements ###
 * Python 3
-* pyinstaller (https://pypi.org/project/pyinstaller/)
-* construct
-* pycrypto (pip3 might have problems with High Sierra, using easy_install worked for me)
+   * pyinstaller (https://pypi.org/project/pyinstaller/)
+   * construct
+   * pycrypto (pyinstaller might have problems with if installed with pip, using easy_install worked for me)
 * Platypus (https://sveinbjorn.org/platypus)
 ### Making convert.py as standalone executable ###
-Running `pyinstaller --onefile ./src/convert.py` creates a convert executable under .dist/.
+Running `pyinstaller --onefile src/convert.py` creates a convert executable under .dist/.
 Include this file in Platypus bundle so the script can access it.
 
 ### Creating osx app with Platypus ###
