@@ -24,6 +24,12 @@ def convert(filename, output_directory):
     else:
         print('Can only convert between MAC and PC!')
         return
+    head, tail = os.path.split(outname)
+    outname2 = output_directory + '/' + tail
+
+    if os.path.isfile(outname2):
+        print(f"{outname2} already exists.")
+        return outname2
 
     with open(filename, 'rb') as fh:
         content = PSARC().parse_stream(fh)
@@ -39,8 +45,6 @@ def convert(filename, output_directory):
 
         new_content[_convert(path, mac2pc)] = data
 
-    head, tail = os.path.split(outname)
-    outname2 = output_directory + '/' + tail
     with open(outname2, 'wb') as fh:
         PSARC().build_stream(new_content, fh)
     return outname2
