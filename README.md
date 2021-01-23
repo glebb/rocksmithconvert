@@ -14,7 +14,7 @@ For mac conversions the new folder is 'converted_for_mac' and for pc 'converted_
 
 ## Building ##
 ### Requirements ###
-* Python 3
+* Python 3.6
    * pyinstaller (https://pypi.org/project/pyinstaller/)
    * construct
    * pycrypto (pyinstaller might have problems with if installed with pip, using easy_install worked for me)
