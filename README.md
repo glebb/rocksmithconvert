@@ -15,6 +15,11 @@ Dropping great_music_p.psarc to the app will output
 /Users/john/Downloads/converted_for_mac/great_music_m.pasarc
 You then just copy the converted file(s) to your Rocksmith dlc folder as usual.
 
+NOTE! In order to avoid problems loading CDLC within Rocksmith, a naming
+strategy is applied to the converted files. This is achieved by 
+removing all unecessary characters and also splitting Artist and Song name
+if needed.
+
 ## Building ##
 The basic idea is to use pyrocksmith to convert the files and
 bundle everything to a nice and clean standalone osx app without additional
