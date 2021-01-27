@@ -5,8 +5,9 @@ then
     progress=0
     psarc_files=()
     for f in "$@"; do if [[ $f == *"_m.psarc"* ]] || [[ $f == *"_p.psarc"* ]]; then psarc_files+=("${f}"); fi; done;
-    for f in ${psarc_files[@]}
+    for f in "$@"
     do
+        if [[ $f != *"_m.psarc"* ]] && [[ $f != *"_p.psarc"* ]]; then continue; fi;
         filename="$(basename "${f}")"
         echo "Processing $filename"
         convert_dir="$(dirname "${f}")/converted_for"

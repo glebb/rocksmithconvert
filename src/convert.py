@@ -43,11 +43,11 @@ def convert(filename, output_directory):
             short_name = create_short_name(tail, data)
     
     outname2 = output_directory + '/'
+    tail = tail.replace(' ', '_')
     if short_name:
         outname2 += short_name + tail[-8:]
     else:
         outname2 += tail 
-    
     if os.path.isfile(outname2):
         print(f"{outname2} already exists.")
         return outname2
@@ -79,7 +79,7 @@ def create_short_name(original, data):
         song += "DD"
 
     short_name = f"{artist}-{song}"
-    keepcharacters = (' ', ',', '_', '-')
+    keepcharacters = ('.', '_', '-')
     return "".join(c for c in short_name if c.isalnum() or c in keepcharacters).rstrip()    
    
 
