@@ -77,7 +77,11 @@ def create_short_name(original, data):
         song = re.sub("[^A-Za-z]+", '', song)[:max_song_length]
     if dd:
         song += "DD"
-    return f"{artist}-{song}".replace(' ','')
+
+    short_name = f"{artist}-{song}"
+    keepcharacters = (' ', ',', '_', '-')
+    return "".join(c for c in short_name if c.isalnum() or c in keepcharacters).rstrip()    
+   
 
 if __name__ == "__main__":
     if len(sys.argv) != 3 or not os.path.isfile(sys.argv[1]) or not os.path.isdir(sys.argv[2]):
