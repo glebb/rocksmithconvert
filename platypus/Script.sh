@@ -3,8 +3,8 @@ export LC_NUMERIC="en_US.UTF-8"
 if (($#>0)) 
 then
     progress=0
-    psarc_files=()
-    for f in "$@"; do if [[ $f == *"_m.psarc"* ]] || [[ $f == *"_p.psarc"* ]]; then psarc_files+=("${f}"); fi; done;
+    psarc_files_count=0
+    for f in "$@"; do if [[ $f == *"_m.psarc"* ]] || [[ $f == *"_p.psarc"* ]]; then ((psarc_files_count+=1)); fi; done;
     for f in "$@"
     do
         if [[ $f != *"_m.psarc"* ]] && [[ $f != *"_p.psarc"* ]]; then continue; fi;
@@ -14,7 +14,7 @@ then
         if [[ $f == *"_m.psarc"* ]]; then convert_dir+="_pc"; else convert_dir+="_mac"; fi;
         mkdir -p "${convert_dir}"
         ./convert "$f" "${convert_dir}"
-        progress="$(bc -l <<<"$progress+(100.0/${#psarc_files[@]})")"
+        progress="$(bc -l <<<"$progress+(100.0/$psarc_files_count)")"
         rounded_progress="$(printf '%.0f' $progress)"
         echo "PROGRESS:$rounded_progress"
     done
