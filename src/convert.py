@@ -2,6 +2,8 @@ import os
 import json
 import sys
 import re
+import argparse
+from shutil import copy2
 from psarc import PSARC
 
 def _convert(data, mac2pc):
@@ -13,7 +15,24 @@ def _convert(data, mac2pc):
         data = data.replace('bin/generic', 'bin/macos')
     return data
 
-def convert(filename, output_directory):
+def rename(filename, output_directory):
+    head, tail = os.path.split(filename)
+    short_name = None
+    
+    with open(filename, 'rb') as fh:
+        content = PSARC().parse_stream(fh)
+    for path, data in content.items():
+        if path.endswith('.hsan'):
+            short_name = create_short_name(tail, data)
+            break
+    outname = output_directory + '/' + short_name
+    if os.path.isfile(outname):
+        print(f"{outname} already exists.")
+        return outname2       
+    copy2(filename, outname)
+    return short_name
+
+def convert(filename, output_directory, use_shortnames=False):
     if filename.endswith('_m.psarc'):
         outname = filename.replace('_m.psarc', '_p.psarc')
         mac2pc = True
@@ -28,9 +47,9 @@ def convert(filename, output_directory):
         content = PSARC().parse_stream(fh)
 
     head, tail = os.path.split(outname)
-    new_content = {}
     short_name = None
 
+    new_content = {}
     for path, data in content.items():
         if path.endswith('aggregategraph.nt'):
             data = _convert(data.decode(), mac2pc)
@@ -39,22 +58,21 @@ def convert(filename, output_directory):
             else:
                 data = data.replace('dx9', 'macos').encode('ascii')
         new_content[_convert(path, mac2pc)] = data
-        if not short_name and path.endswith('.hsan') and len(tail[:-8]) > 23:
+        if use_shortnames and not short_name and path.endswith('.hsan'):
             short_name = create_short_name(tail, data)
     
-    outname2 = output_directory + '/'
-    tail = tail.replace(' ', '_')
+    outname = output_directory + '/'
     if short_name:
-        outname2 += short_name + tail[-8:]
+        outname += short_name
     else:
-        outname2 += tail 
-    if os.path.isfile(outname2):
-        print(f"{outname2} already exists.")
-        return outname2
+        outname += tail 
+    if os.path.isfile(outname):
+        print(f"{outname} already exists.")
+        return outname
 
-    with open(outname2, 'wb') as fh:
+    with open(outname, 'wb') as fh:
         PSARC().build_stream(new_content, fh)
-    return outname2
+    return outname
 
 def find_by_key(data, target):
     for key, value in data.items():
@@ -77,14 +95,29 @@ def create_short_name(original, data):
         song = re.sub("[^A-Za-z]+", '', song)[:max_song_length]
     if dd:
         song += "DD"
-
-    short_name = f"{artist}-{song}"
+    short_name = f"{artist}-{song}" + original[-8:]
     keepcharacters = ('.', '_', '-')
     return "".join(c for c in short_name if c.isalnum() or c in keepcharacters).rstrip()    
    
-
 if __name__ == "__main__":
-    if len(sys.argv) != 3 or not os.path.isfile(sys.argv[1]) or not os.path.isdir(sys.argv[2]):
-        print('Give filename and existing output directory as arguments')
+    parser = argparse.ArgumentParser()
+    parser.add_argument("FILE", help=".psarc file")
+    parser.add_argument("DIR", help="output directory")
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--convert", help="convert file between mac / pc", action='store_true')
+    group.add_argument("--convertshort", help="convert file using shortname", action='store_true')
+    group.add_argument("--rename", help="don't convert, just rename to shortname", action='store_true')
+    args = parser.parse_args()
+    if not os.path.isfile(args.FILE) or not os.path.isdir(args.DIR):
+        print(args.FILE)
+        print(args.DIR)
+        print('Filename and output directory must exist')
         sys.exit()
-    convert(sys.argv[1], sys.argv[2])
+    if args.convert:
+        convert(args.FILE, args.DIR, False)
+    if args.convertshort:
+        convert(args.FILE, args.DIR, True)
+    if args.rename:
+        rename(args.FILE, args.DIR)
+
+    

@@ -5,19 +5,20 @@ Based on 0x0L's pyrocksmith (https://github.com/0x0L/rocksmith)
 
 ## Usage ##
 Just drag & drop files you want to convert to the app. Supports mass covnersions.
+Additionally, you can choose to use short filenames or just rename the files without conversion.
 
 The app creates a new folder to the same location as the original file. The new folder
 contains the converted file(s). If file already exists, conversion is skipped.
 For mac conversions, the folder is called 'converted_for_mac' and for pc 'converted_for_pc'.
+For just renaming the files, folder is called 'renamed'
 
 Example: your CDLC is /Users/john/Downloads/great_music_p.pasarc
 Dropping great_music_p.psarc to the app will output
 /Users/john/Downloads/converted_for_mac/great_music_m.pasarc
 You then just copy the converted file(s) to your Rocksmith dlc folder as usual.
 
-NOTE! In order to avoid problems loading CDLC within Rocksmith, a naming
-strategy is applied to the converted files. This is achieved by 
-removing all unecessary characters and also splitting Artist and Song name
+NOTE! Option for renaming is to avoid problems loading CDLC within Rocksmith. 
+This is achieved by removing all unecessary characters and also splitting Artist and Song name
 if needed.
 
 ## Building ##
