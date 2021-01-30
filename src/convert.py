@@ -28,7 +28,7 @@ def rename(filename, output_directory):
     outname = output_directory + '/' + short_name
     if os.path.isfile(outname):
         print(f"{outname} already exists.")
-        return outname2       
+        return outname       
     copy2(filename, outname)
     return short_name
 
