@@ -3,7 +3,7 @@ import json
 import sys
 import re
 import argparse
-from shutil import copy2
+from shutil import copyfile
 from psarc import PSARC
 
 def _convert(data, mac2pc):
@@ -27,9 +27,9 @@ def rename(filename, output_directory):
             break
     outname = output_directory + '/' + short_name
     if os.path.isfile(outname):
-        print(f"{outname} already exists.")
+        print(f"{outname} already exists.\r\n\r\n")
         return outname       
-    copy2(filename, outname)
+    copyfile(filename, outname)
     return short_name
 
 def convert(filename, output_directory, use_shortnames=False):
@@ -67,7 +67,7 @@ def convert(filename, output_directory, use_shortnames=False):
     else:
         outname += tail 
     if os.path.isfile(outname):
-        print(f"{outname} already exists.")
+        print(f"{outname} already exists.\r\n\r\n")
         return outname
 
     with open(outname, 'wb') as fh:
