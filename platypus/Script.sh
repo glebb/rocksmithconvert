@@ -19,7 +19,8 @@ function choose_folder() {
     user_choice=$(osascript -e 'button returned of (display dialog "Choose output folder?" buttons {"Yes", "User source folder"})')
     if [[ $user_choice == "Yes" ]]; then
         default_dlc="${HOME}/Library/Application Support/Steam/steamapps/common/Rocksmith2014/dlc"
-        script="osascript -e 'set folderName to POSIX path of (choose folder default location \"$default_dlc\")'"
+        if [[ -d $default_dlc ]]; then default_dlc=" default location \"$default_dlc\""; else default_dlc="";fi;
+        script="osascript -e 'set folderName to POSIX path of (choose folder $default_dlc)'"
         temp=$(eval $script)
         echo "$temp"
     fi
