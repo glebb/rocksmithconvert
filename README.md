@@ -1,25 +1,31 @@
 # Rocksmith 2014 CDLC convert PC / Mac #
-Simple standalone OSX app to convert Rocksmith 2014 .psarc files between PC and MAC.
+Simple standalone OSX app to convert/rename Rocksmith 2014 .psarc files between PC and MAC.
 
 Based on 0x0L's pyrocksmith (https://github.com/0x0L/rocksmith)
 
 ## Usage ##
-Just drag & drop files you want to convert to the app. Supports mass covnersions.
+Just drag & drop files you want to convert to the app (supports mass covnersions).
 Additionally, you can choose to use short filenames or just rename the files without conversion.
 
-The app creates a new folder to the same location as the original file. The new folder
-contains the converted file(s). If file already exists, conversion is skipped.
-For mac conversions, the folder is called 'converted_for_mac' and for pc 'converted_for_pc'.
-For just renaming the files, folder is called 'renamed'
+After dropping files to the app you choose the operation you want to perform.
+The options are convert, convert using shortnames or just rename.
+After choosing the operation, you can select the output folder.
+
+If you choose to use the source folder, the app creates a new folders to the same location as the original file. 
+The new folder contains the converted file(s). For mac conversions, the folder is called 'converted_for_mac' and for pc 'converted_for_pc'.
+For just renaming the files, folder is called 'renamed'. If you choose a specific folder, all
+the target files will be placed there.
+
+If target file already exists, operation is skipped.
 
 Example: your CDLC is /Users/john/Downloads/great_music_p.pasarc
-Dropping great_music_p.psarc to the app will output
+Dropping great_music_p.psarc to the app, choosing convert using source folder, the app will output
 /Users/john/Downloads/converted_for_mac/great_music_m.pasarc
-You then just copy the converted file(s) to your Rocksmith dlc folder as usual.
+You then just copy the converted file(s) to your Rocksmith dlc folder as usual (or select that to begin with as target folder).
 
 NOTE! Option for renaming is to avoid problems loading CDLC within Rocksmith. 
 This is achieved by removing all unecessary characters and also splitting Artist and Song name
-if needed.
+if needed. Using rename scheme is optional.
 
 ## Building ##
 The basic idea is to use pyrocksmith to convert the files and
