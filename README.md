@@ -51,11 +51,12 @@ Include this file in Platypus bundle so the script can access it.
 ### Creating osx app with Platypus ###
 Rocksmith 2014 CDLC convert pc mac platypus profile and make sure you have "convert" executable included in the bundle. Also make sure the script points to the provided Script.sh. Then just create the app.
 
-## Download ##
-Readymade package for OSX 10.12 and newer: https://drive.google.com/drive/folders/1jzGLNy7oisBjsHkzJIMMf9E4V_RBXQ8I
+## Download & install ##
+Download latest readymade package for OSX 10.12 and newer: https://github.com/glebb/rocksmithconvert/releases
 
 * Download the package
 * Unzip by double clicking the file (if needed, e.g. Safari does this automatically)
+* No installation needed, you can move the app to Applications folder if you like
 * Start the app -> osx security kicks in (the first time you run it):
 * Allow the app to run by checking osx System Preferences / Security & Privacy / General -> Allow
 
