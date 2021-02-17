@@ -4,7 +4,7 @@ from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 
 
 class ProcessModel(QObject):
-    fileListChanged = pyqtSignal(list)
+    fileListChanged = pyqtSignal(str)
     fileProcessed = pyqtSignal(str)
     canProcess = pyqtSignal(bool)
     targetSet = pyqtSignal(str)
@@ -16,6 +16,7 @@ class ProcessModel(QObject):
         self._files = []
         self._target = ''
         self._processing: bool = False
+        self._targetPlatform: str = ''
 
     def trySetDefaultPath(self, directory=None):
         if directory and os.path.isdir(directory):
@@ -34,7 +35,7 @@ class ProcessModel(QObject):
     @pyqtSlot(list)
     def setFiles(self, files):
         self._files = files.copy()
-        self.fileListChanged.emit(self._files.copy())
+        self.fileListChanged.emit("\n".join(self._files))
         self.emitCanProcess()
 
     @pyqtSlot(int)
@@ -53,10 +54,27 @@ class ProcessModel(QObject):
         self.targetSet.emit(target)
         self.emitCanProcess()
 
-    def setProcessing(self, value):
-        self._processing = value
-        self.emitCanProcess()
+    @pyqtSlot(str)
+    def setPlatform(self, targetPlatform):
+        self._targetPlatform = targetPlatform
+
+    def setProcessing(self, tryToProcess):
+        if tryToProcess:
+            if not self.sanityCheck():
+                return False, f"error: check your settings"
+            if os.path.isdir(self._target):
+                self._processing = True
+                return True, None
+            else:
+                errorDir = self._target
+                self.setTarget('')
+                self.emitCanProcess()
+                return False, f"error: target folder '{errorDir}' does not exist."
+        self._processing = False
 
     def emitCanProcess(self):
-        self.canProcess.emit((self._convert or self._rename) and len(
-            self._files) > 0 and self._target != '' and not self._processing) 
+        self.canProcess.emit(self.sanityCheck()) 
+
+    def sanityCheck(self):
+        return (self._convert or self._rename) and len(
+            self._files) > 0 and self._target != '' and not self._processing        

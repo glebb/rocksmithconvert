@@ -1,96 +1,79 @@
 import sys
+import os
+import glob
 import argparse
 from PyQt5 import QtWidgets, QtCore
 from mainwindow import Ui_MainWindow
 from models import ProcessModel
 from services import ConvertService
+import settings
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     settings = QtCore.QSettings("gui.ini", QtCore.QSettings.IniFormat)
-    
+
     def __init__(self, *args, obj=None, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
+        self.centralwidget.setObjectName("CentralWidget")
+        self.setStyleSheet(
+            "#CentralWidget{background-image:  url(:/assets/assets/snow.jpg); border : 0px}")
         self.messageBox = QtWidgets.QMessageBox()
         self.processModel: ProcessModel = ProcessModel()
         self.convertService: ConvertService = ConvertService()
         self.filesNamesToProcess: list[str] = []
+        self.autoProcessFolder = ''
         self.setupSignals()
         self.initUI()
-        
+        if self.checkBoxAutoProcess.isChecked() and self.autoProcessFolder:
+            self.readFilesForAutoProcessing()
+
+    def readFilesForAutoProcessing(self):
+        files = glob.glob(self.autoProcessFolder + "/*.psarc")
+        if len(files) > 0:
+            self.setFilesList("\n".join(files))
+
     def setupSignals(self):
-        self.pushButtonSelectTarget.clicked.connect(self.openSelectTargetDialog)
-        self.processButton.clicked.connect(self.process)
+        self.pushButtonSelectTarget.clicked.connect(
+            self.openSelectTargetDialog)
+        self.pushButtonDownloadDir.clicked.connect(
+            self.openSelectDownloadDirDialog)
         self.processModel.targetSet.connect(self.setTargetFolder)
-        self.listWidgetFiles.selected.connect(self.updateFilesList)
+        self.plainTextEdit.selected.connect(self.setFilesList)
         self.convertService.listWidgetSignals.finished.connect(
             self.updateProgress)
+        self.convertService.listWidgetSignals.info.connect(
+            self.writeInfo)
 
-        self.processModel.fileListChanged.connect(
-            self.listWidgetFiles.setFilelist)
-        
+        self.processButton.clicked.connect(self.process)
+
         self.checkBoxConvert.stateChanged.connect(self.processModel.setConvert)
+        self.checkBoxConvert.stateChanged.connect(self.setTargetPlatformState)
         self.checkBoxRename.stateChanged.connect(self.processModel.setRename)
-        
+
         self.processModel.canProcess.connect(self.processButton.setEnabled)
 
+        self.comboBoxPlatform.currentTextChanged.connect(
+            self.processModel.setPlatform)
+        self.checkBoxAutoProcess.stateChanged.connect(
+            self.autoProcessStateChanged)
+
     def initUI(self):
-        self.loadSettings(self.settings)
+        settings.loadSettings(self.settings)
         self.progressBar.setValue(0)
         self.processModel.trySetDefaultPath(self.lineEditTarget.text())
         self.processModel.setConvert(self.checkBoxConvert.isChecked())
         self.processModel.setRename(self.checkBoxRename.isChecked())
-
+        self.processModel.setPlatform(self.comboBoxPlatform.currentText())
+        self.setTargetPlatformState(self.checkBoxConvert.isChecked())
+        if os.path.isdir(self.pushButtonDownloadDir.text()):
+            self.autoProcessFolder = self.pushButtonDownloadDir.text()
+        else:
+            self.pushButtonDownloadDir.setText("Set auto-process folder")
 
     def closeEvent(self, event):
-        self.saveSettings(self.settings)
+        settings.saveSettings(self.settings)
         QtWidgets.QMainWindow.closeEvent(self, event)
-
-    def settingsValueIsValid(self, val: str):
-        if val == 'checkBoxConvert': return True
-        if val == 'checkBoxRename': return True
-        if val == 'lineEditTarget': return True
-        if val == 'checkBoxRename': return True
-        if val == 'checked' or val == 'text': return True
-        return False
-
-    def saveSettings(self, settings):
-        for w in QtWidgets.qApp.allWidgets():
-            if w.objectName():
-                if self.settingsValueIsValid(w.objectName()):
-                    mo = w.metaObject()
-                    for i in range(mo.propertyCount()):
-                        prop = mo.property(i)
-                        name = prop.name()
-                        key = "{}/{}".format(w.objectName(), name)
-                        val = w.property(name)
-                        if self.settingsValueIsValid(name) and prop.isValid() and prop.isWritable():
-                            settings.setValue(key, w.property(name))
-    
-    
-    def loadSettings(self, settings):
-        finfo = QtCore.QFileInfo(settings.fileName())
-
-        if finfo.exists() and finfo.isFile():
-            for w in QtWidgets.qApp.allWidgets():
-                if w.objectName():
-                    mo = w.metaObject()
-                    for i in range(mo.propertyCount()):
-                        prop = mo.property(i)
-                        name = prop.name()
-                        last_value = w.property(name)
-                        key = "{}/{}".format(w.objectName(), name)
-                        if not settings.contains(key):
-                            continue
-                        val = settings.value(key, type=type(last_value),)
-                        if (
-                            val != last_value
-                            and self.settingsValueIsValid(w.objectName())
-                            and prop.isValid()
-                            and prop.isWritable()
-                        ):
-                            w.setProperty(name, val)
 
     @QtCore.pyqtSlot()
     def openSelectTargetDialog(self):
@@ -100,20 +83,58 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if directory:
             self.processModel.setTarget(directory)
 
-    @QtCore.pyqtSlot(list)
-    def updateFilesList(self, files):
-        output = []
-        if type(files) is not list:
-            output = [files]
-        else:
-            output = files.copy()
-        self.processModel.setFiles(output)
-        self.processButton.setText(f'Process {len(output)} files')
+    @QtCore.pyqtSlot(str)
+    def writeInfo(self, info):
+        self.plainTextEdit.appendHtml(
+            f"<span style='color: red'>INFO: {info}</span>")
+
+    @QtCore.pyqtSlot()
+    def openSelectDownloadDirDialog(self):
+        defDir = self.pushButtonDownloadDir.text() if os.path.isdir(
+            self.pushButtonDownloadDir.text()) else None
+        options = QtWidgets.QFileDialog.Options()
+        directory = QtWidgets.QFileDialog.getExistingDirectory(
+            self, "QFileDialog.getOpenFileName()", defDir, options=options)
+        if directory and directory != self.processModel._target:
+            self.autoProcessFolder = directory
+            self.pushButtonDownloadDir.setText(directory)
+        if directory == self.processModel._target:
+            self.messageBox.setText(
+                f"Target and auto-process folder need to be different.")
+            self.messageBox.exec()
+
+    @QtCore.pyqtSlot(str)
+    def setFilesList(self, files):
+        filesList = files.strip().split("\n")
+        filesList.sort()
+        self.processModel.setFiles(filesList)
+        self.processButton.setText(f'Process {len(filesList)} files')
+        self.plainTextEdit.clear()
+        if len(files) > 0:
+            names = [os.path.split(filename)[1] for filename in filesList]
+            self.plainTextEdit.appendHtml(
+                "<p><strong>Source files:</strong></p>")
+            for name in names:
+                self.plainTextEdit.appendHtml(f"{name}")
+            if self.checkBoxAutoProcess.isChecked():
+                self.process()
+
+    @QtCore.pyqtSlot(int)
+    def autoProcessStateChanged(self, state):
+        if bool(state) and self.autoProcessFolder:
+            self.readFilesForAutoProcessing()
 
     @QtCore.pyqtSlot()
     def process(self):
-        self.processModel.setProcessing(True)
-        self.listWidgetFiles.setAcceptDrops(False)
+        success, message = self.processModel.setProcessing(True)
+        if not success:
+            self.finishedProcessing()
+            error_dialog = QtWidgets.QErrorMessage()
+            error_dialog.showMessage(f"Processing failed: {message}")
+            error_dialog.exec()
+            return
+        self.allowUserInteraction(False)
+        self.plainTextEdit.appendHtml("<br><p><strong>Log:</strong></p>")
         self.progressBar.setValue(0)
         self.filesNamesToProcess = self.processModel._files.copy()
         self.convertService.process(self.processModel)
@@ -122,31 +143,54 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def setTargetFolder(self, target):
         self.lineEditTarget.setText(target)
 
-    @QtCore.pyqtSlot(str)
-    def updateProgress(self, file):
+    @QtCore.pyqtSlot(list)
+    def updateProgress(self, filenames):
         self.progressBar.setValue(
             self.progressBar.value() + round(100/len(self.filesNamesToProcess)))
         copyOfFiles = self.processModel._files.copy()
-        copyOfFiles.remove(file)
-        self.updateFilesList(copyOfFiles)
+        copyOfFiles.remove(filenames[0])
+        self.processModel.setFiles(copyOfFiles)
         self.processButton.setText(f'Process {len(copyOfFiles)} files')
         if len(copyOfFiles) == 0:
-            self.progressBar.setValue(100)
-            self.messageBox.setText(f"Finished processing {len(self.filesNamesToProcess)} files.")
+            processedCount = len(self.filesNamesToProcess)
+            finished = f"Finished processing {processedCount} files."
+            self.plainTextEdit.appendHtml(finished)
+            self.finishedProcessing()
+            self.messageBox.setText(finished)
             self.messageBox.exec()
-            self.filesNamesToProcess = []
-            self.processModel.setProcessing(False)
-            self.listWidgetFiles.setAcceptDrops(True)
 
+    @QtCore.pyqtSlot(int)
+    def setTargetPlatformState(self, state):
+        if state:
+            self.comboBoxPlatform.setEnabled(True)
+            self.comboBoxPlatform.setVisible(True)
+        else:
+            self.comboBoxPlatform.setDisabled(True)
+            self.comboBoxPlatform.setVisible(False)
+
+    def finishedProcessing(self):
+        self.progressBar.setValue(100)
+        self.processModel.setProcessing(False)
+        self.allowUserInteraction(True)
+        self.progressBar.setValue(0)
+
+    def allowUserInteraction(self, mode: bool):
+        self.plainTextEdit.setAcceptDrops(mode)
+        self.pushButtonSelectTarget.setEnabled(mode)
+        self.comboBoxPlatform.setEnabled(mode)
+        self.checkBoxConvert.setEnabled(mode)
+        self.checkBoxConvert.setEnabled(mode)
+        self.checkBoxAutoProcess.setEnabled(mode)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--files", help=".psarc files", nargs='*')
+    parser.add_argument("files", help=".psarc files", nargs='*')
     args = parser.parse_args()
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindow()
     if args.files:
-        window.updateFilesList(args.files)
+        print(args.files)
+        window.setFilesList("\n".join(args.files))
     window.show()
     app.exec()

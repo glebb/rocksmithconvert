@@ -1,2 +1,3 @@
 #!/bin/sh
-./convert_gui --files "$@"
+export LANG=C.UTF-8
+./convert_gui "$@"

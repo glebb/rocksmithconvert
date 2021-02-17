@@ -8,36 +8,36 @@ from models import ProcessModel
 
 
 class WorkerSignals(QtCore.QObject):
-    finished = QtCore.pyqtSignal(str)
+    finished = QtCore.pyqtSignal(list)
+    info = QtCore.pyqtSignal(str)
 
 
 class _Worker(QtCore.QRunnable):
-    def __init__(self, listWidetSignals, file, target, convert, rename):
+    def __init__(self, listWidetSignals, file, processModel):
         super(_Worker, self).__init__()
         self.file = file
-        self.target = target
-        self.convert = convert
-        self.rename = rename
+        self.processModel = processModel
         self.signal = WorkerSignals()
-        self.converter = Converter()
+        self.converter = Converter(listWidetSignals)
         self.listWidgetSignals = listWidetSignals
 
     @QtCore.pyqtSlot()
     def run(self):
-        self.converter.process(self.file, self.target,
-                               self.convert, self.rename)
-        self.listWidgetSignals.finished.emit(self.file)
+        print(self.file)
+        print(self.processModel)
+        name = self.converter.process(self.file, self.processModel)
+        self.listWidgetSignals.finished.emit([self.file, name])
 
 
 class Converter:
-    def __init__(self):
-        pass
+    def __init__(self, signals):
+        self.signals = signals
 
-    def process(self, file, target, convert, rename):
-        if convert:
-            self.convert(file, target, rename)
+    def process(self, file, processModel):
+        if processModel._convert:
+            return self.convert(file, processModel._target, processModel._targetPlatform, processModel._rename)
         else:
-            self.rename(file, target)
+            return self.rename(file, processModel._target)
 
     def _convert(self, data, mac2pc):
         if mac2pc:
@@ -49,7 +49,7 @@ class Converter:
         return data
 
     def rename(self, filename, output_directory):
-        head, tail = os.path.split(filename)
+        _, tail = os.path.split(filename)
         short_name = None
 
         with open(filename, 'rb') as fh:
@@ -61,25 +61,32 @@ class Converter:
         outname = output_directory + '/' + short_name
         if os.path.isfile(outname):
             print(f"{outname} already exists.\r\n\r\n")
+            self.signals.info.emit(f"{outname} already exists.")
             return outname
         copyfile(filename, outname)
         return short_name
 
-    def convert(self, filename, output_directory, use_shortnames=False):
-        if filename.endswith('_m.psarc'):
+    def convert(self, filename, output_directory, targetPlatform, use_shortnames=False):
+        temp = filename.lower()
+        if not temp.endswith('_m.psarc') and not temp.endswith('_p.psarc'):
+            print('Can only convert between MAC and PC!')
+            self.signals.info.emit(f"Can only convert between MAC and PC: {filename}")
+            return filename
+        if targetPlatform == "PC":
             outname = filename.replace('_m.psarc', '_p.psarc')
             mac2pc = True
-        elif filename.endswith('_p.psarc'):
+        elif targetPlatform == "MAC":
             outname = filename.replace('_p.psarc', '_m.psarc')
             mac2pc = False
         else:
             print('Can only convert between MAC and PC!')
-            return
+            self.signals.info.emit(f"Can only convert between MAC and PC: {filename}")
+            return filename
 
         with open(filename, 'rb') as fh:
             content = PSARC().parse_stream(fh)
 
-        head, tail = os.path.split(outname)
+        _, tail = os.path.split(outname)
         short_name = None
 
         new_content = {}
@@ -101,6 +108,7 @@ class Converter:
             outname += tail
         if os.path.isfile(outname):
             print(f"{outname} already exists.\r\n\r\n")
+            self.signals.info.emit(f"{outname} already exists.")
             return outname
 
         with open(outname, 'wb') as fh:
@@ -140,6 +148,5 @@ class ConvertService:
 
     def process(self, processModel: ProcessModel):
         for file in processModel._files:
-            worker = _Worker(self.listWidgetSignals, file, processModel._target,
-                             processModel._convert, processModel._rename)
+            worker = _Worker(self.listWidgetSignals, file, processModel)
             self.threadpool.start(worker)

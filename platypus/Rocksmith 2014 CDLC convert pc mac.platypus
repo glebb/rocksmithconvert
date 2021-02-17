@@ -12,7 +12,7 @@
 	<string>bodhi</string>
 	<key>BundledFiles</key>
 	<array>
-		<string>/Users/bodhi/src/rocksmithconvert/dist/convert</string>
+		<string>/Users/bodhi/src/rocksmithconvert/dist/convert_gui</string>
 	</array>
 	<key>Creator</key>
 	<string>Platypus-5.3</string>
@@ -33,7 +33,7 @@
 	<key>Identifier</key>
 	<string>org.bodhi.Rocksmith2014CDLCconvertpcmac</string>
 	<key>InterfaceType</key>
-	<string>Progress Bar</string>
+	<string>None</string>
 	<key>InterpreterArgs</key>
 	<array/>
 	<key>InterpreterPath</key>
@@ -49,9 +49,9 @@
 	<key>PromptForFileOnLaunch</key>
 	<false/>
 	<key>RemainRunning</key>
-	<true/>
-	<key>RunInBackground</key>
 	<false/>
+	<key>RunInBackground</key>
+	<true/>
 	<key>ScriptArgs</key>
 	<array/>
 	<key>ScriptPath</key>
@@ -253,6 +253,6 @@
 		<string>public.folder</string>
 	</array>
 	<key>Version</key>
-	<string>1.1</string>
+	<string>2.0</string>
 </dict>
 </plist>

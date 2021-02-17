@@ -38,7 +38,7 @@ Check requirements.txt
    * git+https://github.com/0x0L/rocksmith.git
 * Platypus (https://sveinbjorn.org/platypus)
 
-### Making convert.py as standalone executable ###
+### Making convert_gui.py as standalone executable ###
 Running `pyinstaller --onefile src/convert_gui.py` creates an executable under .dist/.
 Include this file in Platypus bundle so the script can access it.
 
