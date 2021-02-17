@@ -5,51 +5,45 @@ Based on 0x0L's pyrocksmith (https://github.com/0x0L/rocksmith)
 
 ## Usage ##
 Just drag & drop files you want to convert to the app (supports mass covnersions).
-Additionally, you can choose to use short filenames or just rename the files without conversion.
+Additionally, you can choose to use short filenames or just rename(copy) the files without conversion.
 
-After dropping files to the app you choose the operation you want to perform.
-The options are convert, convert using shortnames or just rename.
-After choosing the operation, you can select the output folder.
+If target file already exists, operation is skipped. Original files are not modified, the app always
+creates new files as a result of conversion/rename.
 
-If you choose to use the source folder, the app creates a new folders to the same location as the original file. 
-The new folder contains the converted file(s). For mac conversions, the folder is called 'converted_for_mac' and for pc 'converted_for_pc'.
-For just renaming the files, folder is called 'renamed'. If you choose a specific folder, all
-the target files will be placed there.
+Example: your CDLC is /Users/john/Downloads/Really_Long_Artist_Name-ThisIsJustATribute_p.psarc
+Dropping the file to the app and processing with conversion and rename options enabled, 
+following file is produced: /Users/john/Library/Application Support/Steam/steamapps/common/Rocksmith2014/dlc/ReallyLong-ThisIsJust_m.psarc
+(target folder of course depends on your selection).
 
-If target file already exists, operation is skipped.
-
-Example: your CDLC is /Users/john/Downloads/great_music_p.pasarc
-Dropping great_music_p.psarc to the app, choosing convert using source folder, the app will output
-/Users/john/Downloads/converted_for_mac/great_music_m.pasarc
-You then just copy the converted file(s) to your Rocksmith dlc folder as usual (or select that to begin with as target folder).
+The next time you run the app, settings regarding conversion, renaming and target are as you set them before.
 
 NOTE! Option for renaming is to avoid problems loading CDLC within Rocksmith. 
 This is achieved by removing all unecessary characters and also splitting Artist and Song name
 if needed. Using rename scheme is optional.
 
 ## Building ##
-The basic idea is to use pyrocksmith to convert the files and
+The basic idea is to use pyrocksmith to parse the files and
 bundle everything to a nice and clean standalone osx app without additional
 dependencies. Batteries included. This is achieved
-by using pyinstaller to create a single executable and then Platypus to 
-bundle it as an osx app. Simple bash script is used to execute conversion file by file
-and report progress.
-
-Only minimal set of pyrocksmith code is used with slight modifications.
+by using pyinstaller to create a single executable from PyQt app and then Platypus to 
+bundle it as an osx app. Platypus packaging is used only for convenience,
+to allow dropping files straight on top of the app icon.
 
 ### Requirements ###
+Check requirements.txt
+* Qt 5
 * Python 3.6
+   * PyQt5
    * pyinstaller (https://pypi.org/project/pyinstaller/)
-   * construct
-   * pycrypto (pyinstaller might have problems with if installed with pip, using easy_install worked for me)
+   * git+https://github.com/0x0L/rocksmith.git
 * Platypus (https://sveinbjorn.org/platypus)
 
 ### Making convert.py as standalone executable ###
-Running `pyinstaller --onefile src/convert.py` creates a convert executable under .dist/.
+Running `pyinstaller --onefile src/convert_gui.py` creates an executable under .dist/.
 Include this file in Platypus bundle so the script can access it.
 
 ### Creating osx app with Platypus ###
-Rocksmith 2014 CDLC convert pc mac platypus profile and make sure you have "convert" executable included in the bundle. Also make sure the script points to the provided Script.sh. Then just create the app.
+Rocksmith 2014 CDLC convert pc mac platypus profile and make sure you have "convert_gui" executable included in the bundle. Also make sure the script points to the provided Script.sh. Then just create the app.
 
 ## Download & install ##
 Download latest readymade package for OSX 10.12 and newer: https://github.com/glebb/rocksmithconvert/releases

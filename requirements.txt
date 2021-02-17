@@ -1,2 +1,3 @@
 PyQt5==5.12.3
 git+https://github.com/0x0L/rocksmith.git
+pyinstaller==4.2
