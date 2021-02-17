@@ -12,7 +12,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, *args, obj=None, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
-        self.viewModel: ProcessModel = ProcessModel()
+        self.messageBox = QtWidgets.QMessageBox()
+        self.processModel: ProcessModel = ProcessModel()
         self.convertService: ConvertService = ConvertService()
         self.filesNamesToProcess: list[str] = []
         self.setupSignals()
@@ -21,32 +22,32 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def setupSignals(self):
         self.pushButtonSelectTarget.clicked.connect(self.openSelectTargetDialog)
         self.processButton.clicked.connect(self.process)
-        self.viewModel.targetSet.connect(self.setTargetFolder)
+        self.processModel.targetSet.connect(self.setTargetFolder)
         self.listWidgetFiles.selected.connect(self.updateFilesList)
         self.convertService.listWidgetSignals.finished.connect(
             self.updateProgress)
 
-        self.viewModel.fileListChanged.connect(
+        self.processModel.fileListChanged.connect(
             self.listWidgetFiles.setFilelist)
         
-        self.checkBoxConvert.stateChanged.connect(self.viewModel.setConvert)
-        self.checkBoxRename.stateChanged.connect(self.viewModel.setRename)
+        self.checkBoxConvert.stateChanged.connect(self.processModel.setConvert)
+        self.checkBoxRename.stateChanged.connect(self.processModel.setRename)
         
-        self.viewModel.canProcess.connect(self.processButton.setEnabled)
+        self.processModel.canProcess.connect(self.processButton.setEnabled)
 
     def initUI(self):
         self.loadSettings(self.settings)
         self.progressBar.setValue(0)
-        self.viewModel.trySetDefaultPath(self.lineEditTarget.text())
-        self.viewModel.setConvert(self.checkBoxConvert.isChecked())
-        self.viewModel.setRename(self.checkBoxRename.isChecked())
+        self.processModel.trySetDefaultPath(self.lineEditTarget.text())
+        self.processModel.setConvert(self.checkBoxConvert.isChecked())
+        self.processModel.setRename(self.checkBoxRename.isChecked())
 
 
     def closeEvent(self, event):
         self.saveSettings(self.settings)
         QtWidgets.QMainWindow.closeEvent(self, event)
 
-    def settingsValueIsValid(self, val):
+    def settingsValueIsValid(self, val: str):
         if val == 'checkBoxConvert': return True
         if val == 'checkBoxRename': return True
         if val == 'lineEditTarget': return True
@@ -95,9 +96,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def openSelectTargetDialog(self):
         options = QtWidgets.QFileDialog.Options()
         directory = QtWidgets.QFileDialog.getExistingDirectory(
-            self, "QFileDialog.getOpenFileName()", self.viewModel._target, options=options)
+            self, "QFileDialog.getOpenFileName()", self.processModel._target, options=options)
         if directory:
-            self.viewModel.setTarget(directory)
+            self.processModel.setTarget(directory)
 
     @QtCore.pyqtSlot(list)
     def updateFilesList(self, files):
@@ -106,14 +107,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             output = [files]
         else:
             output = files.copy()
-        self.viewModel.setFiles(output)
-        self.processButton.setText(f'Process {len(output)}')
+        self.processModel.setFiles(output)
+        self.processButton.setText(f'Process {len(output)} files')
 
     @QtCore.pyqtSlot()
     def process(self):
+        self.processModel.setProcessing(True)
+        self.listWidgetFiles.setAcceptDrops(False)
         self.progressBar.setValue(0)
-        self.filesNamesToProcess = self.viewModel._files.copy()
-        self.convertService.process(self.viewModel)
+        self.filesNamesToProcess = self.processModel._files.copy()
+        self.convertService.process(self.processModel)
 
     @QtCore.pyqtSlot(str)
     def setTargetFolder(self, target):
@@ -123,13 +126,19 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def updateProgress(self, file):
         self.progressBar.setValue(
             self.progressBar.value() + round(100/len(self.filesNamesToProcess)))
-        copyOfFiles = self.viewModel._files.copy()
+        copyOfFiles = self.processModel._files.copy()
         copyOfFiles.remove(file)
         self.updateFilesList(copyOfFiles)
-        self.processButton.setText(f'Process {len(copyOfFiles)}')
+        self.processButton.setText(f'Process {len(copyOfFiles)} files')
         if len(copyOfFiles) == 0:
             self.progressBar.setValue(100)
+            self.messageBox.setText(f"Finished processing {len(self.filesNamesToProcess)} files.")
+            self.messageBox.exec()
             self.filesNamesToProcess = []
+            self.processModel.setProcessing(False)
+            self.listWidgetFiles.setAcceptDrops(True)
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

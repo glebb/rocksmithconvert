@@ -15,6 +15,7 @@ class ProcessModel(QObject):
         self._rename: bool = False
         self._files = []
         self._target = ''
+        self._processing: bool = False
 
     def trySetDefaultPath(self, directory=None):
         if directory and os.path.isdir(directory):
@@ -52,6 +53,10 @@ class ProcessModel(QObject):
         self.targetSet.emit(target)
         self.emitCanProcess()
 
+    def setProcessing(self, value):
+        self._processing = value
+        self.emitCanProcess()
+
     def emitCanProcess(self):
         self.canProcess.emit((self._convert or self._rename) and len(
-            self._files) > 0 and self._target != '')
+            self._files) > 0 and self._target != '' and not self._processing) 
