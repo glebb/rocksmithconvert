@@ -23,8 +23,6 @@ class _Worker(QtCore.QRunnable):
 
     @QtCore.pyqtSlot()
     def run(self):
-        print(self.file)
-        print(self.processModel)
         name = self.converter.process(self.file, self.processModel)
         self.listWidgetSignals.finished.emit([self.file, name])
 

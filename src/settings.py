@@ -4,7 +4,10 @@ def settingsValueIsValid(widget: QtWidgets.QWidget, val: str):
     if isinstance(widget, QtWidgets.QCheckBox) and val == 'checked': return True
     if isinstance(widget, QtWidgets.QLineEdit) and val == 'text': return True
     if isinstance(widget, QtWidgets.QComboBox) and val == 'currentText': return True
+    if isinstance(widget, QtWidgets.QPushButton) and widget.objectName() == 'pushButtonDownloadDir' and val == 'toolTip': return True
     if isinstance(widget, QtWidgets.QPushButton) and widget.objectName() == 'pushButtonDownloadDir' and val == 'text': return True
+    if isinstance(widget, QtWidgets.QPushButton) and widget.objectName() == 'pushButtonSelectTarget' and val == 'text': return True
+    if isinstance(widget, QtWidgets.QPushButton) and widget.objectName() == 'pushButtonSelectTarget' and val == 'toolTip': return True
     return False
 
 def saveSettings(settings):

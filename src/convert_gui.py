@@ -7,6 +7,7 @@ from mainwindow import Ui_MainWindow
 from models import ProcessModel
 from services import ConvertService
 import settings
+import folders
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -61,15 +62,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def initUI(self):
         settings.loadSettings(self.settings)
         self.progressBar.setValue(0)
-        self.processModel.trySetDefaultPath(self.lineEditTarget.text())
+        self.processModel.trySetDefaultPath(self.pushButtonSelectTarget.toolTip())
         self.processModel.setConvert(self.checkBoxConvert.isChecked())
         self.processModel.setRename(self.checkBoxRename.isChecked())
         self.processModel.setPlatform(self.comboBoxPlatform.currentText())
         self.setTargetPlatformState(self.checkBoxConvert.isChecked())
-        if os.path.isdir(self.pushButtonDownloadDir.text()):
-            self.autoProcessFolder = self.pushButtonDownloadDir.text()
+        if os.path.isdir(self.pushButtonDownloadDir.toolTip()):
+            self.autoProcessFolder = self.pushButtonDownloadDir.toolTip()
         else:
             self.pushButtonDownloadDir.setText("Set auto-process folder")
+        if os.path.isdir(self.pushButtonSelectTarget.toolTip()):
+            self.processModel.setTarget(self.pushButtonSelectTarget.toolTip())
+
 
     def closeEvent(self, event):
         settings.saveSettings(self.settings)
@@ -86,18 +90,19 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.pyqtSlot(str)
     def writeInfo(self, info):
         self.plainTextEdit.appendHtml(
-            f"<span style='color: red'>INFO: {info}</span>")
+            f"<span style='color: red'>{info}</span>")
 
     @QtCore.pyqtSlot()
     def openSelectDownloadDirDialog(self):
         defDir = self.pushButtonDownloadDir.text() if os.path.isdir(
-            self.pushButtonDownloadDir.text()) else None
+            self.pushButtonDownloadDir.toolTip()) else None
         options = QtWidgets.QFileDialog.Options()
         directory = QtWidgets.QFileDialog.getExistingDirectory(
             self, "QFileDialog.getOpenFileName()", defDir, options=options)
         if directory and directory != self.processModel._target:
             self.autoProcessFolder = directory
-            self.pushButtonDownloadDir.setText(directory)
+            self.pushButtonDownloadDir.setText(folders.shortenFolder(directory))
+            self.pushButtonDownloadDir.setToolTip(directory)
         if directory == self.processModel._target:
             self.messageBox.setText(
                 f"Target and auto-process folder need to be different.")
@@ -141,20 +146,24 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     @QtCore.pyqtSlot(str)
     def setTargetFolder(self, target):
-        self.lineEditTarget.setText(target)
+        self.pushButtonSelectTarget.setToolTip(target)
+        self.pushButtonSelectTarget.setText(folders.shortenFolder(target))
 
     @QtCore.pyqtSlot(list)
-    def updateProgress(self, filenames):
+    def updateProgress(self, file):
         self.progressBar.setValue(
             self.progressBar.value() + round(100/len(self.filesNamesToProcess)))
         copyOfFiles = self.processModel._files.copy()
-        copyOfFiles.remove(filenames[0])
+        copyOfFiles.remove(file[0])
         self.processModel.setFiles(copyOfFiles)
         self.processButton.setText(f'Process {len(copyOfFiles)} files')
+        _, tail = os.path.split(file[1])
+        self.plainTextEdit.appendHtml(f"{tail}")
         if len(copyOfFiles) == 0:
             processedCount = len(self.filesNamesToProcess)
             finished = f"Finished processing {processedCount} files."
             self.plainTextEdit.appendHtml(finished)
+            self.plainTextEdit.ensureCursorVisible()
             self.finishedProcessing()
             self.messageBox.setText(finished)
             self.messageBox.exec()
@@ -190,7 +199,6 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindow()
     if args.files:
-        print(args.files)
         window.setFilesList("\n".join(args.files))
     window.show()
     app.exec()
