@@ -3,6 +3,7 @@ Simple standalone OSX app to convert/rename Rocksmith 2014 .psarc files between 
 
 Based on 0x0L's pyrocksmith (https://github.com/0x0L/rocksmith)
 
+![Screenshot](docs/screenshot.png)
 ## Download & install ##
 Download latest readymade package for OSX 10.12 and newer: https://github.com/glebb/rocksmithconvert/releases
 
