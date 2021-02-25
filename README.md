@@ -14,7 +14,7 @@ Download latest readymade package for OSX 10.12 and newer: https://github.com/gl
 * Allow the app to run by checking osx System Preferences / Security & Privacy / General -> Allow
 
 ## Usage ##
-Just drag & drop files you want to convert to the app (supports mass covnersions).
+Just drag & drop files you want to convert to the app (supports mass conversions).
 Additionally, you can choose to use short filenames or just rename(copy) the files without conversion.
 
 If target file already exists, operation is skipped. Original files are not modified, the app always
