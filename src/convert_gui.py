@@ -139,7 +139,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             error_dialog.exec()
             return
         self.allowUserInteraction(False)
-        self.plainTextEdit.appendHtml("<br><p><strong>Log:</strong></p>")
+        self.plainTextEdit.appendHtml("<br><p><strong>Process log:</strong></p>")
         self.progressBar.setValue(0)
         self.filesNamesToProcess = self.processModel._files.copy()
         self.convertService.process(self.processModel)
@@ -149,16 +149,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.pushButtonSelectTarget.setToolTip(target)
         self.pushButtonSelectTarget.setText(folders.shortenFolder(target))
 
-    @QtCore.pyqtSlot(list)
+    @QtCore.pyqtSlot(dict)
     def updateProgress(self, file):
         self.progressBar.setValue(
             self.progressBar.value() + round(100/len(self.filesNamesToProcess)))
         copyOfFiles = self.processModel._files.copy()
-        copyOfFiles.remove(file[0])
+        copyOfFiles.remove(file['original'])
         self.processModel.setFiles(copyOfFiles)
         self.processButton.setText(f'Process {len(copyOfFiles)} files')
-        _, tail = os.path.split(file[1])
-        self.plainTextEdit.appendHtml(f"{tail}")
+        if file['processed']:
+            _, tail = os.path.split(file['processed'])
+            self.plainTextEdit.appendHtml(f"{tail}")
         if len(copyOfFiles) == 0:
             processedCount = len(self.filesNamesToProcess)
             finished = f"Finished processing {processedCount} files."

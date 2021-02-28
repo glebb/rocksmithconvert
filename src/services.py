@@ -8,7 +8,7 @@ from models import ProcessModel
 
 
 class WorkerSignals(QtCore.QObject):
-    finished = QtCore.pyqtSignal(list)
+    finished = QtCore.pyqtSignal(dict)
     info = QtCore.pyqtSignal(str)
 
 
@@ -24,7 +24,7 @@ class _Worker(QtCore.QRunnable):
     @QtCore.pyqtSlot()
     def run(self):
         name = self.converter.process(self.file, self.processModel)
-        self.listWidgetSignals.finished.emit([self.file, name])
+        self.listWidgetSignals.finished.emit({'original': self.file, 'processed': name})
 
 
 class Converter:
@@ -60,7 +60,7 @@ class Converter:
         if os.path.isfile(outname):
             print(f"{outname} already exists.\r\n\r\n")
             self.signals.info.emit(f"{outname} already exists.")
-            return outname
+            return None
         copyfile(filename, outname)
         return short_name
 
@@ -69,7 +69,7 @@ class Converter:
         if not temp.endswith('_m.psarc') and not temp.endswith('_p.psarc'):
             print('Can only convert between MAC and PC!')
             self.signals.info.emit(f"Can only convert between MAC and PC: {filename}")
-            return filename
+            return None
         if targetPlatform == "PC":
             outname = filename.replace('_m.psarc', '_p.psarc')
             mac2pc = True
@@ -79,7 +79,7 @@ class Converter:
         else:
             print('Can only convert between MAC and PC!')
             self.signals.info.emit(f"Can only convert between MAC and PC: {filename}")
-            return filename
+            return None
 
         with open(filename, 'rb') as fh:
             content = PSARC().parse_stream(fh)
@@ -107,7 +107,7 @@ class Converter:
         if os.path.isfile(outname):
             print(f"{outname} already exists.\r\n\r\n")
             self.signals.info.emit(f"{outname} already exists.")
-            return outname
+            return None
 
         with open(outname, 'wb') as fh:
             PSARC().build_stream(new_content, fh)
