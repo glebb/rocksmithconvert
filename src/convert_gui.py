@@ -1,6 +1,5 @@
 import sys
 import os
-import glob
 import argparse
 from PyQt5 import QtWidgets, QtCore
 from mainwindow import Ui_MainWindow
@@ -8,6 +7,7 @@ from models import ProcessModel
 from services import ConvertService
 import settings
 import folders
+from autoprocess import AutoProcessor
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -23,16 +23,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.processModel: ProcessModel = ProcessModel()
         self.convertService: ConvertService = ConvertService()
         self.filesNamesToProcess: list[str] = []
-        self.autoProcessFolder = ''
+        self.ap = AutoProcessor()
         self.setupSignals()
         self.initUI()
-        if self.checkBoxAutoProcess.isChecked() and self.autoProcessFolder:
-            self.readFilesForAutoProcessing()
-
-    def readFilesForAutoProcessing(self):
-        files = glob.glob(self.autoProcessFolder + "/*.psarc")
-        if len(files) > 0:
-            self.setFilesList("\n".join(files))
+        if self.checkBoxAutoProcess.isChecked() and self.ap.autoProcessFolder:
+            self.ap.start()
 
     def setupSignals(self):
         self.pushButtonSelectTarget.clicked.connect(
@@ -57,7 +52,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.comboBoxPlatform.currentTextChanged.connect(
             self.processModel.setPlatform)
         self.checkBoxAutoProcess.stateChanged.connect(
-            self.autoProcessStateChanged)
+            self.ap.autoProcessStateChanged)
+
+        self.ap.filesAdded.connect(self.setFilesList)
 
     def initUI(self):
         settings.loadSettings(self.settings)
@@ -68,7 +65,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.processModel.setPlatform(self.comboBoxPlatform.currentText())
         self.setTargetPlatformState(self.checkBoxConvert.isChecked())
         if os.path.isdir(self.pushButtonDownloadDir.toolTip()):
-            self.autoProcessFolder = self.pushButtonDownloadDir.toolTip()
+            self.ap.autoProcessFolder = self.pushButtonDownloadDir.toolTip()
         else:
             self.pushButtonDownloadDir.setText("Set auto-process folder")
         if os.path.isdir(self.pushButtonSelectTarget.toolTip()):
@@ -100,7 +97,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         directory = QtWidgets.QFileDialog.getExistingDirectory(
             self, "QFileDialog.getOpenFileName()", defDir, options=options)
         if directory and directory != self.processModel._target:
-            self.autoProcessFolder = directory
+            self.ap.autoProcessFolder = directory
             self.pushButtonDownloadDir.setText(folders.shortenFolder(directory))
             self.pushButtonDownloadDir.setToolTip(directory)
         if directory == self.processModel._target:
@@ -114,7 +111,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         filesList.sort()
         self.processModel.setFiles(filesList)
         self.processButton.setText(f'Process {len(filesList)} files')
-        self.plainTextEdit.clear()
+        if not self.checkBoxAutoProcess.isChecked():
+            self.plainTextEdit.clear()
         if len(files) > 0:
             names = [os.path.split(filename)[1] for filename in filesList]
             self.plainTextEdit.appendHtml(
@@ -123,11 +121,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.plainTextEdit.appendHtml(f"{name}")
             if self.checkBoxAutoProcess.isChecked():
                 self.process()
-
-    @QtCore.pyqtSlot(int)
-    def autoProcessStateChanged(self, state):
-        if bool(state) and self.autoProcessFolder:
-            self.readFilesForAutoProcessing()
 
     @QtCore.pyqtSlot()
     def process(self):
@@ -166,8 +159,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.plainTextEdit.appendHtml(finished)
             self.plainTextEdit.ensureCursorVisible()
             self.finishedProcessing()
-            self.messageBox.setText(finished)
-            self.messageBox.exec()
+            if not self.checkBoxAutoProcess.isChecked():
+                self.messageBox.setText(finished)
+                self.messageBox.exec()
 
     @QtCore.pyqtSlot(int)
     def setTargetPlatformState(self, state):
