@@ -1,7 +1,9 @@
 import sys
 import os
 import argparse
+from typing import Dict
 from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtGui import QCloseEvent
 from mainwindow import Ui_MainWindow
 from models import ProcessModel
 from services import ConvertService
@@ -13,7 +15,7 @@ from autoprocess import AutoProcessor
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     settings = QtCore.QSettings("gui.ini", QtCore.QSettings.IniFormat)
 
-    def __init__(self, *args, obj=None, **kwargs):
+    def __init__(self, *args, obj=None, **kwargs) -> None:
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.centralwidget.setObjectName("CentralWidget")
@@ -29,7 +31,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if self.checkBoxAutoProcess.isChecked() and self.ap.autoProcessFolder:
             self.ap.start()
 
-    def setupSignals(self):
+    def setupSignals(self) -> None:
         self.pushButtonSelectTarget.clicked.connect(
             self.openSelectTargetDialog)
         self.pushButtonDownloadDir.clicked.connect(
@@ -56,7 +58,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.ap.filesAdded.connect(self.setFilesList)
 
-    def initUI(self):
+    def initUI(self) -> None:
         settings.loadSettings(self.settings)
         self.progressBar.setValue(0)
         self.processModel.trySetDefaultPath(self.pushButtonSelectTarget.toolTip())
@@ -72,12 +74,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.processModel.setTarget(self.pushButtonSelectTarget.toolTip())
 
 
-    def closeEvent(self, event):
+    def closeEvent(self, event: QCloseEvent) -> None:
         settings.saveSettings(self.settings)
         QtWidgets.QMainWindow.closeEvent(self, event)
 
     @QtCore.pyqtSlot()
-    def openSelectTargetDialog(self):
+    def openSelectTargetDialog(self) -> None:
         options = QtWidgets.QFileDialog.Options()
         directory = QtWidgets.QFileDialog.getExistingDirectory(
             self, "QFileDialog.getOpenFileName()", self.processModel._target, options=options)
@@ -85,12 +87,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.processModel.setTarget(directory)
 
     @QtCore.pyqtSlot(str)
-    def writeInfo(self, info):
+    def writeInfo(self, info) -> None:
         self.plainTextEdit.appendHtml(
             f"<span style='color: red'>{info}</span>")
 
     @QtCore.pyqtSlot()
-    def openSelectDownloadDirDialog(self):
+    def openSelectDownloadDirDialog(self) -> None:
         defDir = self.pushButtonDownloadDir.text() if os.path.isdir(
             self.pushButtonDownloadDir.toolTip()) else None
         options = QtWidgets.QFileDialog.Options()
@@ -106,7 +108,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.messageBox.exec()
 
     @QtCore.pyqtSlot(str)
-    def setFilesList(self, files):
+    def setFilesList(self, files: str) -> None:
         filesList = files.strip().split("\n")
         filesList.sort()
         self.processModel.setFiles(filesList)
@@ -123,7 +125,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.process()
 
     @QtCore.pyqtSlot()
-    def process(self):
+    def process(self) -> None:
         success, message = self.processModel.setProcessing(True)
         if not success:
             self.finishedProcessing()
@@ -138,12 +140,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.convertService.process(self.processModel)
 
     @QtCore.pyqtSlot(str)
-    def setTargetFolder(self, target):
+    def setTargetFolder(self, target: str) -> None:
         self.pushButtonSelectTarget.setToolTip(target)
         self.pushButtonSelectTarget.setText(folders.shortenFolder(target))
 
     @QtCore.pyqtSlot(dict)
-    def updateProgress(self, file):
+    def updateProgress(self, file: Dict[str, str]) -> None:
         self.progressBar.setValue(
             self.progressBar.value() + round(100/len(self.filesNamesToProcess)))
         copyOfFiles = self.processModel._files.copy()
@@ -164,7 +166,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.messageBox.exec()
 
     @QtCore.pyqtSlot(int)
-    def setTargetPlatformState(self, state):
+    def setTargetPlatformState(self, state: int) -> None:
         if state:
             self.comboBoxPlatform.setEnabled(True)
             self.comboBoxPlatform.setVisible(True)
@@ -172,13 +174,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.comboBoxPlatform.setDisabled(True)
             self.comboBoxPlatform.setVisible(False)
 
-    def finishedProcessing(self):
+    def finishedProcessing(self) -> None:
         self.progressBar.setValue(100)
         self.processModel.setProcessing(False)
         self.allowUserInteraction(True)
         self.progressBar.setValue(0)
 
-    def allowUserInteraction(self, mode: bool):
+    def allowUserInteraction(self, mode: bool) -> None:
         self.plainTextEdit.setAcceptDrops(mode)
         self.pushButtonSelectTarget.setEnabled(mode)
         self.comboBoxPlatform.setEnabled(mode)

@@ -1,6 +1,7 @@
 import os
 import json
 import re
+from typing import Optional
 from PyQt5 import QtCore
 from shutil import copyfile
 from rocksmith import PSARC
@@ -13,7 +14,7 @@ class WorkerSignals(QtCore.QObject):
 
 
 class _Worker(QtCore.QRunnable):
-    def __init__(self, listWidetSignals, file, processModel):
+    def __init__(self, listWidetSignals: WorkerSignals, file: str, processModel: ProcessModel) -> None:
         super(_Worker, self).__init__()
         self.file = file
         self.processModel = processModel
@@ -22,22 +23,22 @@ class _Worker(QtCore.QRunnable):
         self.listWidgetSignals = listWidetSignals
 
     @QtCore.pyqtSlot()
-    def run(self):
+    def run(self) -> None:
         name = self.converter.process(self.file, self.processModel)
         self.listWidgetSignals.finished.emit({'original': self.file, 'processed': name})
 
 
 class Converter:
-    def __init__(self, signals):
+    def __init__(self, signals: WorkerSignals):
         self.signals = signals
 
-    def process(self, file, processModel):
+    def process(self, file: str, processModel: ProcessModel) -> Optional[str]:
         if processModel._convert:
             return self.convert(file, processModel._target, processModel._targetPlatform, processModel._rename)
         else:
             return self.rename(file, processModel._target)
 
-    def _convert(self, data, mac2pc):
+    def _convert(self, data: str, mac2pc: bool) -> str:
         if mac2pc:
             data = data.replace('audio/mac', 'audio/windows')
             data = data.replace('bin/macos', 'bin/generic')
@@ -46,7 +47,7 @@ class Converter:
             data = data.replace('bin/generic', 'bin/macos')
         return data
 
-    def rename(self, filename, output_directory):
+    def rename(self, filename: str, output_directory: str) -> Optional[str]:
         _, tail = os.path.split(filename)
         short_name = None
 
@@ -64,7 +65,7 @@ class Converter:
         copyfile(filename, outname)
         return short_name
 
-    def convert(self, filename, output_directory, targetPlatform, use_shortnames=False):
+    def convert(self, filename: str, output_directory: str, targetPlatform:str, use_shortnames:bool=False) -> Optional[str]:
         temp = filename.lower()
         if not temp.endswith('_m.psarc') and not temp.endswith('_p.psarc'):
             print('Can only convert between MAC and PC!')
@@ -113,14 +114,14 @@ class Converter:
             PSARC().build_stream(new_content, fh)
         return outname
 
-    def find_by_key(self, data, target):
+    def find_by_key(self, data:str, target:str) -> str:
         for key, value in data.items():
             if isinstance(value, dict):
                 yield from self.find_by_key(value, target)
             elif key == target:
                 yield value
 
-    def create_short_name(self, original, data):
+    def create_short_name(self, original:str, data:str) -> str:
         data_dict = json.loads(data)
         artist = list(self.find_by_key(data_dict, "ArtistName"))[0]
         song = list(self.find_by_key(data_dict, "SongName"))[0]
@@ -140,11 +141,11 @@ class Converter:
 
 
 class ConvertService:
-    def __init__(self):
+    def __init__(self) -> None:
         self.threadpool = QtCore.QThreadPool()
         self.listWidgetSignals = WorkerSignals()
 
-    def process(self, processModel: ProcessModel):
+    def process(self, processModel: ProcessModel) -> None:
         for file in processModel._files:
             worker = _Worker(self.listWidgetSignals, file, processModel)
             self.threadpool.start(worker)

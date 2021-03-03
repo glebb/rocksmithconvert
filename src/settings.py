@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets, QtCore
 
-def settingsValueIsValid(widget: QtWidgets.QWidget, val: str):
+def settingsValueIsValid(widget: QtWidgets.QWidget, val: str) -> bool:
     if isinstance(widget, QtWidgets.QCheckBox) and val == 'checked': return True
     if isinstance(widget, QtWidgets.QLineEdit) and val == 'text': return True
     if isinstance(widget, QtWidgets.QComboBox) and val == 'currentText': return True
@@ -10,7 +10,7 @@ def settingsValueIsValid(widget: QtWidgets.QWidget, val: str):
     if isinstance(widget, QtWidgets.QPushButton) and widget.objectName() == 'pushButtonSelectTarget' and val == 'toolTip': return True
     return False
 
-def saveSettings(settings):
+def saveSettings(settings: QtCore.QSettings) -> None:
     for w in QtWidgets.qApp.allWidgets():
         if w.objectName():
             mo = w.metaObject()
@@ -23,7 +23,7 @@ def saveSettings(settings):
                     settings.setValue(key, w.property(name))
 
 
-def loadSettings(settings):
+def loadSettings(settings: QtCore.QSettings) -> None:
     finfo = QtCore.QFileInfo(settings.fileName())
     if finfo.exists() and finfo.isFile():
         for w in QtWidgets.qApp.allWidgets():

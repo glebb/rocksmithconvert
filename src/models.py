@@ -9,7 +9,7 @@ class ProcessModel(QObject):
     canProcess = pyqtSignal(bool)
     targetSet = pyqtSignal(str)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super(ProcessModel, self).__init__()
         self._convert: bool = False
         self._rename: bool = False
@@ -18,7 +18,7 @@ class ProcessModel(QObject):
         self._processing: bool = False
         self._targetPlatform: str = ''
 
-    def trySetDefaultPath(self, directory=None):
+    def trySetDefaultPath(self, directory:str=None) -> None:
         if directory and os.path.isdir(directory):
             self.setTarget(directory)
             return
@@ -33,18 +33,18 @@ class ProcessModel(QObject):
             self.setTarget('')
 
     @pyqtSlot(list)
-    def setFiles(self, files):
+    def setFiles(self, files: List[str]) -> None:
         self._files = files.copy()
         self.fileListChanged.emit("\n".join(self._files))
         self.emitCanProcess()
 
     @pyqtSlot(int)
-    def setConvert(self, convertValue):
+    def setConvert(self, convertValue: int) -> None:
         self._convert = bool(convertValue)
         self.emitCanProcess()
 
     @pyqtSlot(int)
-    def setRename(self, renameValue):
+    def setRename(self, renameValue: int) -> None:
         self._rename = bool(renameValue)
         self.emitCanProcess()
 
