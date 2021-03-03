@@ -68,6 +68,10 @@ Check requirements.txt
    * git+https://github.com/0x0L/rocksmith.git
 * Platypus (https://sveinbjorn.org/platypus)
 
+### UI ###
+Qt Creator is used to handle the master .ui files and those should be always up to date (no manual changes to generated python files). 
+To convert files to python source, use pyuic (e.g. `pyuic5 -x mainwindow.ui -o mainwindow.py`)
+
 ### Making convert_gui.py as standalone executable ###
 Running `pyinstaller --onefile src/convert_gui.py` creates an executable under .dist/.
 Include this file in Platypus bundle so the script can access it.
