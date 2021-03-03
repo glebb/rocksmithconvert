@@ -51,7 +51,7 @@
 	<key>RemainRunning</key>
 	<false/>
 	<key>RunInBackground</key>
-	<true/>
+	<false/>
 	<key>ScriptArgs</key>
 	<array/>
 	<key>ScriptPath</key>
@@ -253,6 +253,6 @@
 		<string>public.folder</string>
 	</array>
 	<key>Version</key>
-	<string>2.0</string>
+	<string>2.0.0-alpha2</string>
 </dict>
 </plist>
