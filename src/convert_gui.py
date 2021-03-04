@@ -102,6 +102,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.ap.autoProcessFolder = directory
             self.pushButtonDownloadDir.setText(folders.shortenFolder(directory))
             self.pushButtonDownloadDir.setToolTip(directory)
+            self.ap.autoProcessStateChanged(int(self.checkBoxAutoProcess.isChecked()))
         if directory == self.processModel._target:
             self.messageBox.setText(
                 f"Target and auto-process folder need to be different.")
