@@ -147,8 +147,7 @@ class Ui_MainWindow(object):
         self.comboBoxPlatform.addItem("")
         self.comboBoxPlatform.addItem("")
         self.gridLayout.addWidget(self.comboBoxPlatform, 1, 1, 2, 1)
-        self.verticalLayout.addWidget(self.widget)
-        self.pushButtonSelectTarget = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButtonSelectTarget = QtWidgets.QPushButton(self.widget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -157,7 +156,11 @@ class Ui_MainWindow(object):
         self.pushButtonSelectTarget.setAutoFillBackground(False)
         self.pushButtonSelectTarget.setStyleSheet("border-color: rgb(0, 0, 0);")
         self.pushButtonSelectTarget.setObjectName("pushButtonSelectTarget")
-        self.verticalLayout.addWidget(self.pushButtonSelectTarget)
+        self.gridLayout.addWidget(self.pushButtonSelectTarget, 4, 0, 1, 2)
+        self.labelTarget = QtWidgets.QLabel(self.widget)
+        self.labelTarget.setObjectName("labelTarget")
+        self.gridLayout.addWidget(self.labelTarget, 3, 0, 1, 1)
+        self.verticalLayout.addWidget(self.widget)
         self.widget_3 = QtWidgets.QWidget(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
@@ -180,10 +183,6 @@ class Ui_MainWindow(object):
         self.verticalLayout.addWidget(self.widget_3)
         self.gridLayout_2.addLayout(self.verticalLayout, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 650, 22))
-        self.menubar.setObjectName("menubar")
-        MainWindow.setMenuBar(self.menubar)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -201,14 +200,11 @@ class Ui_MainWindow(object):
 "</style></head><body style=\" font-family:\'.AppleSystemUIFont\'; font-size:13pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Drop files to Drop Zone for processing.</p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Conversion / Rename example:</p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Really_Long_Artist_Name-ThisIsJustATribute_p.psarc</p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">-&gt; </span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">ReallyLong-ThisIsJust_m.psarc</p>\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Original files remain as they are, new files are created to target folder. If target file exists, processing is skipped.</p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">If auto-process is selected, the app will check specified folder and execute processing without further user interaction. Auto-processing is also applied  when files are manually dropped to app.</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Rename will shorten the target filename to 10+10 character (artist-song) format.</p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">With auto-processing enabled, the app will check specified folder periodically and execute processing without further user interaction when new files are found. Auto-processing is also applied  when files are manually dropped to app.</p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><a href=\"https://github.com/glebb/rocksmithconvert\"><span style=\" text-decoration: underline; color:#0068da;\">Github page</span></a></p></body></html>"))
         self.checkBoxConvert.setText(_translate("MainWindow", "Convert"))
@@ -216,8 +212,9 @@ class Ui_MainWindow(object):
         self.comboBoxPlatform.setItemText(0, _translate("MainWindow", "MAC"))
         self.comboBoxPlatform.setItemText(1, _translate("MainWindow", "PC"))
         self.pushButtonSelectTarget.setText(_translate("MainWindow", "Select target folder"))
-        self.checkBoxAutoProcess.setText(_translate("MainWindow", "Auto-process"))
-        self.pushButtonDownloadDir.setText(_translate("MainWindow", "Set auto-process folder"))
+        self.labelTarget.setText(_translate("MainWindow", "Target:"))
+        self.checkBoxAutoProcess.setText(_translate("MainWindow", "Auto-process:"))
+        self.pushButtonDownloadDir.setText(_translate("MainWindow", "Select auto-process folder"))
 from droparea import DropArea
 import resources_rc
 
