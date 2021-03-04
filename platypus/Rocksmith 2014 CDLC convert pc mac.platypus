@@ -12,7 +12,7 @@
 	<string>bodhi</string>
 	<key>BundledFiles</key>
 	<array>
-		<string>/Users/bodhi/src/rocksmithconvert/dist/convert_gui</string>
+		<string>/Users/bodhi/src/rocksmithconvert/dist/RSConvert_GUI</string>
 	</array>
 	<key>Creator</key>
 	<string>Platypus-5.3</string>

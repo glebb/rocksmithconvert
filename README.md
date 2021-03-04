@@ -73,10 +73,10 @@ Qt Creator is used to handle the master .ui files and those should be always up 
 To convert files to python source, use pyuic (e.g. `pyuic5 -x mainwindow.ui -o mainwindow.py`)
 
 ### Making convert_gui.py as standalone executable ###
-Running `pyinstaller --onefile src/convert_gui.py` creates an executable under .dist/.
+Running `pyinstaller --name 'RSConvert_GUI' --onefile src/convert_gui.py --clean` creates an executable under .dist/.
 Include this file in Platypus bundle so the script can access it.
 
 ### Creating osx app with Platypus ###
-Rocksmith 2014 CDLC convert pc mac platypus profile and make sure you have "convert_gui" executable included in the bundle. Also make sure the script points to the provided Script.sh. Then just create the app.
+Rocksmith 2014 CDLC convert pc mac platypus profile and make sure you have "RSConvert_GUI" executable included in the bundle. Also make sure the script points to the provided Script.sh. Then just create the app.
 
 
