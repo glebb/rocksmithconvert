@@ -1,12 +1,14 @@
 import os
 import json
 import re
+import traceback
 from typing import Optional
 from PyQt5 import QtCore
 from shutil import copyfile
 from rocksmith import PSARC
 from models import ProcessModel
-
+from pathlib import Path
+from time import sleep
 
 class WorkerSignals(QtCore.QObject):
     finished = QtCore.pyqtSignal(dict)
@@ -18,13 +20,25 @@ class _Worker(QtCore.QRunnable):
         super(_Worker, self).__init__()
         self.file = file
         self.processModel = processModel
-        self.signal = WorkerSignals()
         self.converter = Converter(listWidetSignals)
         self.listWidgetSignals = listWidetSignals
 
     @QtCore.pyqtSlot()
     def run(self) -> None:
-        name = self.converter.process(self.file, self.processModel)
+        tryCount = 0
+        while Path(self.file).stat().st_size == 0:
+            sleep(1)
+            print(f'Waiting for file {self.file}...')
+            tryCount += 1
+            if tryCount > 20:
+                self.listWidgetSignals.info.emit(f"Failed processing {self.file}. File size was 0.")
+                name = None
+        try:
+            name = self.converter.process(self.file, self.processModel)
+        except:
+            self.listWidgetSignals.info.emit(f"Failed processing {self.file}.")
+            self.listWidgetSignals.info.emit(f"Unexpected error: {traceback.format_exc()}")
+            name = None
         self.listWidgetSignals.finished.emit({'original': self.file, 'processed': name})
 
 
