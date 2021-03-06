@@ -1,14 +1,14 @@
 import sys
 import os
 import argparse
-from typing import Dict
+from typing import Dict, List
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QCloseEvent
 from mainwindow import Ui_MainWindow
 from models import ProcessModel
 from services import ConvertService
 import settings
-import folders
+import files_and_folders
 from autoprocess import AutoProcessor
 
 
@@ -94,7 +94,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self, "Select source folder", defDir, options=options)
         if directory and directory != self.processModel._target:
             self.ap.autoProcessFolder = directory
-            self.pushButtonSelectSource.setText(folders.shortenFolder(directory))
+            self.pushButtonSelectSource.setText(files_and_folders.shortenFolder(directory))
             self.pushButtonSelectSource.setToolTip(directory)
             self.ap.autoProcessStateChanged(int(self.checkBoxAutoProcess.isChecked()))
             return
@@ -111,21 +111,26 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.ap.autoProcessFolder = ''
 
 
-    @QtCore.pyqtSlot(str)
-    def setFilesList(self, files: str) -> None:
-        filesList = files.strip().split("\n")
+    @QtCore.pyqtSlot(list)
+    def setFilesList(self, files: List[str]) -> None:
+        filesList = [file for file in files if file.endswith('.psarc')]
+        if len(filesList) == 0:
+            return
         filesList.sort()
         self.processModel.setFiles(filesList)
+
         if not self.checkBoxAutoProcess.isChecked():
             self.plainTextEdit.clear()
-        if len(files) > 0:
-            names = [os.path.split(filename)[1] for filename in filesList]
-            self.plainTextEdit.appendHtml(
-                "<p><strong>Source files:</strong></p>")
-            for name in names:
-                self.plainTextEdit.appendHtml(f"{name}")
-            if self.checkBoxAutoProcess.isChecked():
-                self.process()
+        else:
+            self.plainTextEdit.appendHtml('<br>')  
+
+        self.plainTextEdit.appendHtml(
+            "<p><strong>Source files:</strong></p>")
+        names = [os.path.split(filename)[1] for filename in filesList]
+        for name in names:
+            self.plainTextEdit.appendHtml(f"{name}")
+
+        self.process()
 
     @QtCore.pyqtSlot()
     def process(self) -> None:
@@ -144,7 +149,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.pyqtSlot(str)
     def setTargetFolder(self, target: str) -> None:
         self.pushButtonSelectTarget.setToolTip(target)
-        self.pushButtonSelectTarget.setText(folders.shortenFolder(target))
+        self.pushButtonSelectTarget.setText(files_and_folders.shortenFolder(target))
 
     @QtCore.pyqtSlot(dict)
     def updateProgress(self, file: Dict[str, str]) -> None:
@@ -178,7 +183,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.progressBar.setValue(100)
         self.processModel.setProcessing(False)
         self.allowUserInteraction(True)
-        self.progressBar.setValue(0)
 
     def allowUserInteraction(self, mode: bool) -> None:
         self.frameDropArea.setAcceptDrops(mode)
@@ -196,6 +200,6 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindow()
     if args.files:
-        window.setFilesList("\n".join(args.files))
+        window.setFilesList(args.files)
     window.show()
     app.exec()

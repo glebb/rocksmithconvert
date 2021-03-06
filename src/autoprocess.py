@@ -3,7 +3,7 @@ from glob import glob
 import os
 
 class AutoProcessor(QObject):
-    filesAdded = pyqtSignal(str)
+    filesAdded = pyqtSignal(list)
     folderNotSet = pyqtSignal()
 
     def __init__(self) -> None:
@@ -30,7 +30,7 @@ class AutoProcessor(QObject):
         freshFiles = glob(self.autoProcessFolder + "/*.psarc")
         changedFiles = list(set(freshFiles) - set(self.fileList))
         if len(changedFiles) > 0:
-            self.filesAdded.emit("\n".join(changedFiles))
+            self.filesAdded.emit(changedFiles)
         self.fileList = freshFiles
         return True
 

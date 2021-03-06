@@ -4,7 +4,6 @@ from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 
 
 class ProcessModel(QObject):
-    fileListChanged = pyqtSignal(str)
     fileProcessed = pyqtSignal(str)
     canProcess = pyqtSignal(bool)
     targetSet = pyqtSignal(str)
@@ -36,8 +35,6 @@ class ProcessModel(QObject):
     @pyqtSlot(list)
     def setFiles(self, files: List[str]) -> None:
         self._files = files.copy()
-        self._count = len(files)
-        self.fileListChanged.emit("\n".join(self._files))
         self.emitCanProcess()
 
     @pyqtSlot(int)
@@ -66,6 +63,7 @@ class ProcessModel(QObject):
                 return False, f"error: check your settings"
             if os.path.isdir(self._target):
                 self._processing = True
+                self._count = len(self._files)
                 return True, None
             else:
                 errorDir = self._target
