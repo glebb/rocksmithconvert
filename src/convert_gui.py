@@ -37,19 +37,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.pushButtonDownloadDir.clicked.connect(
             self.openSelectDownloadDirDialog)
         self.processModel.targetSet.connect(self.setTargetFolder)
-        self.plainTextEdit.selected.connect(self.setFilesList)
+        self.frameDropArea.selected.connect(self.setFilesList)
         self.convertService.listWidgetSignals.finished.connect(
             self.updateProgress)
         self.convertService.listWidgetSignals.info.connect(
             self.writeInfo)
 
-        self.processButton.clicked.connect(self.process)
-
         self.checkBoxConvert.stateChanged.connect(self.processModel.setConvert)
         self.checkBoxConvert.stateChanged.connect(self.setTargetPlatformState)
         self.checkBoxRename.stateChanged.connect(self.processModel.setRename)
-
-        self.processModel.canProcess.connect(self.processButton.setEnabled)
 
         self.comboBoxPlatform.currentTextChanged.connect(
             self.processModel.setPlatform)
@@ -113,7 +109,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         filesList = files.strip().split("\n")
         filesList.sort()
         self.processModel.setFiles(filesList)
-        self.processButton.setText(f'Process {len(filesList)} files')
         if not self.checkBoxAutoProcess.isChecked():
             self.plainTextEdit.clear()
         if len(files) > 0:
@@ -152,7 +147,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         copyOfFiles = self.processModel._files.copy()
         copyOfFiles.remove(file['original'])
         self.processModel.setFiles(copyOfFiles)
-        self.processButton.setText(f'Process {len(copyOfFiles)} files')
         if file['processed']:
             _, tail = os.path.split(file['processed'])
             self.plainTextEdit.appendHtml(f"{tail}")
@@ -182,7 +176,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.progressBar.setValue(0)
 
     def allowUserInteraction(self, mode: bool) -> None:
-        self.plainTextEdit.setAcceptDrops(mode)
+        self.frameDropArea.setAcceptDrops(mode)
         self.pushButtonSelectTarget.setEnabled(mode)
         self.comboBoxPlatform.setEnabled(mode)
         self.checkBoxConvert.setEnabled(mode)

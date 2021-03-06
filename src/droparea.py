@@ -1,10 +1,10 @@
 from PyQt5.QtCore import QEvent, pyqtSignal
-from PyQt5.QtWidgets import QPlainTextEdit
+from PyQt5.QtWidgets import QFrame
 
-class DropArea(QPlainTextEdit):
+class DropArea(QFrame):
     selected = pyqtSignal(str)
 
-    def __init__(self, parent: QPlainTextEdit = None) -> None:
+    def __init__(self, parent: QFrame = None) -> None:
         super(DropArea, self).__init__(parent)
         self.setAcceptDrops(True)
         self.setAutoFillBackground(True)
