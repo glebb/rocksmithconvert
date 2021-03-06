@@ -155,10 +155,10 @@ class Ui_MainWindow(object):
         self.checkBoxAutoProcess = QtWidgets.QCheckBox(self.widget_3)
         self.checkBoxAutoProcess.setObjectName("checkBoxAutoProcess")
         self.verticalLayout_4.addWidget(self.checkBoxAutoProcess)
-        self.pushButtonDownloadDir = QtWidgets.QPushButton(self.widget_3)
-        self.pushButtonDownloadDir.setEnabled(True)
-        self.pushButtonDownloadDir.setObjectName("pushButtonDownloadDir")
-        self.verticalLayout_4.addWidget(self.pushButtonDownloadDir)
+        self.pushButtonSelectSource = QtWidgets.QPushButton(self.widget_3)
+        self.pushButtonSelectSource.setEnabled(True)
+        self.pushButtonSelectSource.setObjectName("pushButtonSelectSource")
+        self.verticalLayout_4.addWidget(self.pushButtonSelectSource)
         self.verticalLayoutLeft.addWidget(self.widget_3)
         self.gridLayout_4.addLayout(self.verticalLayoutLeft, 0, 0, 1, 1)
         self.gridLayout_2.addWidget(self.frameDropArea, 0, 0, 1, 1)
@@ -175,13 +175,13 @@ class Ui_MainWindow(object):
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'.AppleSystemUIFont\'; font-size:13pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Drop files to Drop Zone for processing.</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Drop files to app for processing.</p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Original files remain as they are, new files are created to target folder. If target file exists, processing is skipped.</p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Rename will shorten the target filename to 10+10 character (artist-song) format.</p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">With auto-processing enabled, the app will check specified folder periodically and execute processing without further user interaction when new files are found. Auto-processing is also applied  when files are manually dropped to app.</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">With auto-processing enabled, the app will check specified folder periodically and execute processing without further user interaction when new files are found. </p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><a href=\"https://github.com/glebb/rocksmithconvert\"><span style=\" text-decoration: underline; color:#0068da;\">Github page</span></a></p></body></html>"))
         self.checkBoxConvert.setText(_translate("MainWindow", "Convert"))
@@ -191,7 +191,7 @@ class Ui_MainWindow(object):
         self.pushButtonSelectTarget.setText(_translate("MainWindow", "Select target folder"))
         self.labelTarget.setText(_translate("MainWindow", "Target:"))
         self.checkBoxAutoProcess.setText(_translate("MainWindow", "Auto-process:"))
-        self.pushButtonDownloadDir.setText(_translate("MainWindow", "Select auto-process folder"))
+        self.pushButtonSelectSource.setText(_translate("MainWindow", "Select auto-process folder"))
 from droparea import DropArea
 import resources_rc
 

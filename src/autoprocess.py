@@ -1,8 +1,10 @@
 from PyQt5.QtCore import QTimer, QObject, pyqtSignal, pyqtSlot
 from glob import glob
+import os
 
 class AutoProcessor(QObject):
     filesAdded = pyqtSignal(str)
+    folderNotSet = pyqtSignal()
 
     def __init__(self) -> None:
         super(AutoProcessor, self).__init__()
@@ -13,21 +15,28 @@ class AutoProcessor(QObject):
 
     @pyqtSlot(int)
     def autoProcessStateChanged(self, state: int) -> None:
-        if bool(state) and self.autoProcessFolder:
+        if bool(state):
+            if not os.path.isdir(self.autoProcessFolder):
+                self.folderNotSet.emit()
+                return
             self.start()
         else:
             self.stop()
 
-    def checkFiles(self) -> None:
-        freshFiles = glob("/Users/bodhi/Downloads/*.psarc")
+    def checkFiles(self) -> bool:
+        if not os.path.isdir(self.autoProcessFolder):
+            self.folderNotSet.emit()
+            return False
+        freshFiles = glob(self.autoProcessFolder + "/*.psarc")
         changedFiles = list(set(freshFiles) - set(self.fileList))
         if len(changedFiles) > 0:
             self.filesAdded.emit("\n".join(changedFiles))
         self.fileList = freshFiles
+        return True
 
     def start(self) -> None:
-        self.checkFiles()
-        self.timer.start(5000)
+        if self.checkFiles():
+            self.timer.start(5000)
 
     def stop(self) -> None:
         self.timer.stop()

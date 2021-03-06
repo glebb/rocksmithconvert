@@ -17,8 +17,9 @@ class ProcessModel(QObject):
         self._target = ''
         self._processing: bool = False
         self._targetPlatform: str = ''
+        self._count = 0
 
-    def trySetDefaultPath(self, directory:str=None) -> None:
+    def trySetDefaultPath(self, directory:str = None) -> None:
         if directory and os.path.isdir(directory):
             self.setTarget(directory)
             return
@@ -35,6 +36,7 @@ class ProcessModel(QObject):
     @pyqtSlot(list)
     def setFiles(self, files: List[str]) -> None:
         self._files = files.copy()
+        self._count = len(files)
         self.fileListChanged.emit("\n".join(self._files))
         self.emitCanProcess()
 

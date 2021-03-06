@@ -18,24 +18,39 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, *args, obj=None, **kwargs) -> None:
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
-        self.centralwidget.setObjectName("CentralWidget")
         self.setStyleSheet(
-            "#CentralWidget{background-image:  url(:/assets/assets/snow.jpg); border : 0px}")
-        self.messageBox = QtWidgets.QMessageBox()
+            "#MainWindow{background-image:  url(:/assets/assets/snow.jpg); border : 0px}")
+        settings.loadSettings(self.settings)
+        self.setTargetPlatformState(self.checkBoxConvert.isChecked())
+        self.messageBox: QtWidgets.QMessageBox = QtWidgets.QMessageBox()
         self.processModel: ProcessModel = ProcessModel()
         self.convertService: ConvertService = ConvertService()
-        self.filesNamesToProcess: list[str] = []
-        self.ap = AutoProcessor()
-        self.setupSignals()
-        self.initUI()
-        if self.checkBoxAutoProcess.isChecked() and self.ap.autoProcessFolder:
-            self.ap.start()
+        self.ap: AutoProcessor = AutoProcessor()
+        self.setupUiSignals()
+        self.setupCustomSignals()
+        self.initProcessing()
 
-    def setupSignals(self) -> None:
+    def setupUiSignals(self) -> None:
         self.pushButtonSelectTarget.clicked.connect(
             self.openSelectTargetDialog)
-        self.pushButtonDownloadDir.clicked.connect(
-            self.openSelectDownloadDirDialog)
+
+        self.pushButtonSelectSource.clicked.connect(
+            self.openSelectSourceDialog)
+
+        self.checkBoxConvert.stateChanged.connect(self.processModel.setConvert)
+        self.checkBoxConvert.stateChanged.connect(self.setTargetPlatformState)
+
+        self.checkBoxRename.stateChanged.connect(self.processModel.setRename)
+
+        self.comboBoxPlatform.currentTextChanged.connect(
+            self.processModel.setPlatform)
+
+        self.checkBoxAutoProcess.stateChanged.connect(
+            self.ap.autoProcessStateChanged)
+
+    def setupCustomSignals(self):
+        self.ap.filesAdded.connect(self.setFilesList)
+        self.ap.folderNotSet.connect(self.openSelectSourceDialog)
         self.processModel.targetSet.connect(self.setTargetFolder)
         self.frameDropArea.selected.connect(self.setFilesList)
         self.convertService.listWidgetSignals.finished.connect(
@@ -43,31 +58,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.convertService.listWidgetSignals.info.connect(
             self.writeInfo)
 
-        self.checkBoxConvert.stateChanged.connect(self.processModel.setConvert)
-        self.checkBoxConvert.stateChanged.connect(self.setTargetPlatformState)
-        self.checkBoxRename.stateChanged.connect(self.processModel.setRename)
-
-        self.comboBoxPlatform.currentTextChanged.connect(
-            self.processModel.setPlatform)
-        self.checkBoxAutoProcess.stateChanged.connect(
-            self.ap.autoProcessStateChanged)
-
-        self.ap.filesAdded.connect(self.setFilesList)
-
-    def initUI(self) -> None:
-        settings.loadSettings(self.settings)
-        self.progressBar.setValue(0)
+    def initProcessing(self):
         self.processModel.trySetDefaultPath(self.pushButtonSelectTarget.toolTip())
         self.processModel.setConvert(self.checkBoxConvert.isChecked())
         self.processModel.setRename(self.checkBoxRename.isChecked())
         self.processModel.setPlatform(self.comboBoxPlatform.currentText())
-        self.setTargetPlatformState(self.checkBoxConvert.isChecked())
-        if os.path.isdir(self.pushButtonDownloadDir.toolTip()):
-            self.ap.autoProcessFolder = self.pushButtonDownloadDir.toolTip()
-        else:
-            self.pushButtonDownloadDir.setText("Set auto-process folder")
-        if os.path.isdir(self.pushButtonSelectTarget.toolTip()):
-            self.processModel.setTarget(self.pushButtonSelectTarget.toolTip())
+        self.ap.autoProcessFolder = self.pushButtonSelectSource.toolTip()
+        if self.checkBoxAutoProcess.isChecked():
+            self.ap.start()
 
 
     def closeEvent(self, event: QCloseEvent) -> None:
@@ -78,7 +76,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def openSelectTargetDialog(self) -> None:
         options = QtWidgets.QFileDialog.Options()
         directory = QtWidgets.QFileDialog.getExistingDirectory(
-            self, "QFileDialog.getOpenFileName()", self.processModel._target, options=options)
+            self, "Select target folder", self.processModel._target, options=options)
         if directory:
             self.processModel.setTarget(directory)
 
@@ -88,21 +86,30 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             f"<span style='color: red'>{info}</span>")
 
     @QtCore.pyqtSlot()
-    def openSelectDownloadDirDialog(self) -> None:
-        defDir = self.pushButtonDownloadDir.text() if os.path.isdir(
-            self.pushButtonDownloadDir.toolTip()) else None
+    def openSelectSourceDialog(self) -> None:
+        defDir = self.pushButtonSelectSource.toolTip() if os.path.isdir(
+            self.pushButtonSelectSource.toolTip()) else None
         options = QtWidgets.QFileDialog.Options()
         directory = QtWidgets.QFileDialog.getExistingDirectory(
-            self, "QFileDialog.getOpenFileName()", defDir, options=options)
+            self, "Select source folder", defDir, options=options)
         if directory and directory != self.processModel._target:
             self.ap.autoProcessFolder = directory
-            self.pushButtonDownloadDir.setText(folders.shortenFolder(directory))
-            self.pushButtonDownloadDir.setToolTip(directory)
+            self.pushButtonSelectSource.setText(folders.shortenFolder(directory))
+            self.pushButtonSelectSource.setToolTip(directory)
             self.ap.autoProcessStateChanged(int(self.checkBoxAutoProcess.isChecked()))
+            return
         if directory == self.processModel._target:
             self.messageBox.setText(
                 f"Target and auto-process folder need to be different.")
             self.messageBox.exec()
+        self.disableAutoProcessor()
+
+    def disableAutoProcessor(self):
+        self.checkBoxAutoProcess.setCheckState(0)
+        self.pushButtonSelectSource.setText('Select auto-process folder')
+        self.pushButtonSelectSource.setToolTip('')
+        self.ap.autoProcessFolder = ''
+
 
     @QtCore.pyqtSlot(str)
     def setFilesList(self, files: str) -> None:
@@ -132,7 +139,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.allowUserInteraction(False)
         self.plainTextEdit.appendHtml("<br><p><strong>Process log:</strong></p>")
         self.progressBar.setValue(0)
-        self.filesNamesToProcess = self.processModel._files.copy()
         self.convertService.process(self.processModel)
 
     @QtCore.pyqtSlot(str)
@@ -143,7 +149,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.pyqtSlot(dict)
     def updateProgress(self, file: Dict[str, str]) -> None:
         self.progressBar.setValue(
-            self.progressBar.value() + round(100/len(self.filesNamesToProcess)))
+            self.progressBar.value() + round(100/self.processModel._count))
         copyOfFiles = self.processModel._files.copy()
         copyOfFiles.remove(file['original'])
         self.processModel.setFiles(copyOfFiles)
@@ -151,8 +157,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             _, tail = os.path.split(file['processed'])
             self.plainTextEdit.appendHtml(f"{tail}")
         if len(copyOfFiles) == 0:
-            processedCount = len(self.filesNamesToProcess)
-            finished = f"Finished processing {processedCount} files."
+            finished = f"Finished processing {self.processModel._count} files."
             self.plainTextEdit.appendHtml(finished)
             self.plainTextEdit.ensureCursorVisible()
             self.finishedProcessing()
