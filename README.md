@@ -60,17 +60,17 @@ bundle it as an osx app. Platypus packaging is used only for convenience,
 to allow dropping files straight on top of the app icon, which pyinstaller doesn't seem to handle easily.
 
 ### Requirements ###
-Check requirements.txt
 * Qt 5
-* Python 3.6
-   * PyQt5
-   * pyinstaller (https://pypi.org/project/pyinstaller/)
-   * git+https://github.com/0x0L/rocksmith.git
+* Python 3.6:
+   * `pip install -r requirements.txt`:
+      * PyQt5
+      * pyinstaller (https://pypi.org/project/pyinstaller/)
+      * git+https://github.com/0x0L/rocksmith.git
 * Platypus (https://sveinbjorn.org/platypus)
 
 ### UI ###
-Qt Creator is used to handle the master .ui files and those should be always up to date (no manual changes to generated python files). 
-To convert files to python source, use pyuic (e.g. `pyuic5 -x mainwindow.ui -o mainwindow.py`)
+Qt Creator is used to handle the master .ui and resource files and those should always be up to date (no manual changes to generated python files). 
+To convert "qt" files to python source, use pyuic and pyrcc (e.g. `pyuic5 -x mainwindow.ui -o mainwindow.py`, `pyrcc5 resources.qrc -o resources_rc.py`)
 
 ### Making convert_gui.py as standalone executable ###
 Running `pyinstaller --name 'RSConvert_GUI' --onefile src/convert_gui.py --clean` creates an executable under .dist/.

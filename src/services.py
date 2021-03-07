@@ -5,7 +5,7 @@ import traceback
 from typing import Optional
 from PyQt5 import QtCore
 from shutil import copyfile
-from rocksmith import PSARC
+from rocksmith.psarc import PSARC
 from models import ProcessModel
 from pathlib import Path
 from time import sleep
