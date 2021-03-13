@@ -2,7 +2,7 @@ from PyQt5.QtCore import QEvent, pyqtSignal
 from PyQt5.QtWidgets import QFrame
 
 class DropArea(QFrame):
-    selected = pyqtSignal(list)
+    filesDropped = pyqtSignal(list)
 
     def __init__(self, parent: QFrame = None) -> None:
         super(DropArea, self).__init__(parent)
@@ -17,7 +17,7 @@ class DropArea(QFrame):
     def dropEvent(self, event: QEvent):
         mimeData = event.mimeData()
         if mimeData.hasUrls():
-            self.selected.emit([url.path() for url in mimeData.urls()])
+            self.filesDropped.emit([url.path() for url in mimeData.urls()])
             event.acceptProposedAction()
 
     def dragLeaveEvent(self, event: QEvent):

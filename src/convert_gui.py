@@ -1,17 +1,16 @@
 import sys
-import argparse
-from PyQt5 import QtWidgets, QtCore
-from controllers import MainController
-from widgets import MainWindow
+from argparse import ArgumentParser
+from PyQt5 import QtWidgets
+from controllers import MainWindowController
 
 
 def parseFilesFromArguments():
-    parser = argparse.ArgumentParser()
+    parser = ArgumentParser()
     parser.add_argument("files", help=".psarc files", nargs='*')
     args = parser.parse_args()
     return args.files
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    controller = MainController(parseFilesFromArguments())
+    controller = MainWindowController(parseFilesFromArguments())
     app.exec()

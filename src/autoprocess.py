@@ -1,6 +1,6 @@
-from PyQt5.QtCore import QTimer, QObject, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QTimer, QObject, pyqtSignal
 from glob import glob
-import os
+from os import path
 
 class AutoProcessor(QObject):
     filesAdded = pyqtSignal(list)
@@ -13,18 +13,8 @@ class AutoProcessor(QObject):
         self.fileList = []
         self.timer.timeout.connect(self.checkFiles)
 
-    @pyqtSlot(int)
-    def autoProcessStateChanged(self, state: int) -> None:
-        if bool(state):
-            if not os.path.isdir(self.autoProcessFolder):
-                self.folderNotSet.emit()
-                return
-            self.start()
-        else:
-            self.stop()
-
     def checkFiles(self) -> bool:
-        if not os.path.isdir(self.autoProcessFolder):
+        if not path.isdir(self.autoProcessFolder):
             self.folderNotSet.emit()
             return False
         freshFiles = glob(self.autoProcessFolder + "/*.psarc")

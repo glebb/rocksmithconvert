@@ -1,7 +1,7 @@
-import os
-import json
-import re
-import traceback
+from os import path
+from json import loads
+from re import sub
+from traceback import format_exc
 from typing import Optional
 from PyQt5 import QtCore
 from shutil import copyfile
@@ -11,39 +11,53 @@ from pathlib import Path
 from time import sleep
 
 class WorkerSignals(QtCore.QObject):
-    finished = QtCore.pyqtSignal(dict)
+    update = QtCore.pyqtSignal(dict)
     info = QtCore.pyqtSignal(str)
+    finished = QtCore.pyqtSignal(int)
+    startProcess = QtCore.pyqtSignal()
 
+
+class _WorkerWaiter(QtCore.QThread):
+    def __init__(self, threadSignals: WorkerSignals, pool: QtCore.QThreadPool, processModel: ProcessModel) -> None:
+        super(_WorkerWaiter, self).__init__(pool)
+        self.threadPool = pool
+        self.signals = threadSignals
+        self.processModel = processModel
+
+    @QtCore.pyqtSlot()
+    def run(self):
+        self.threadPool.waitForDone()
+        self.signals.finished.emit(len(self.processModel.files))
 
 class _Worker(QtCore.QRunnable):
-    def __init__(self, listWidetSignals: WorkerSignals, file: str, processModel: ProcessModel) -> None:
+    def __init__(self, threadSignals: WorkerSignals, file: str, processModel: ProcessModel) -> None:
         super(_Worker, self).__init__()
         self.file = file
         self.processModel = processModel
-        self.converter = Converter(listWidetSignals)
-        self.listWidgetSignals = listWidetSignals
+        self.converter = Converter(threadSignals)
+        self.signals = threadSignals
 
     @QtCore.pyqtSlot()
     def run(self) -> None:
         tryCount = 0
-        if not os.path.isfile(self.file):
+        if not path.isfile(self.file):
             name = None
-            self.listWidgetSignals.info.emit(f"File does not exist: {self.file}.")
+            self.signals.info.emit(f"File does not exist: {self.file}.")
         else:
             while Path(self.file).stat().st_size == 0:
                 sleep(1)
                 print(f'Waiting for file {self.file}...')
                 tryCount += 1
                 if tryCount > 20:
-                    self.listWidgetSignals.info.emit(f"Failed processing {self.file}. File size was 0.")
+                    self.signals.info.emit(f"Failed processing {self.file}. File size was 0.")
                     name = None
             try:
                 name = self.converter.process(self.file, self.processModel)
             except:
-                self.listWidgetSignals.info.emit(f"Failed processing {self.file}.")
-                self.listWidgetSignals.info.emit(f"Unexpected error: {traceback.format_exc()}")
+                self.signals.info.emit(f"Failed processing {self.file}.")
+                self.signals.info.emit(f"Unexpected error: {format_exc()}")
                 name = None
-        self.listWidgetSignals.finished.emit({'original': self.file, 'processed': name})
+        self.signals.update.emit({'original': self.file, 'processed': name, 'count': str(len(self.processModel.files))})
 
 
 class Converter:
@@ -51,10 +65,10 @@ class Converter:
         self.signals = signals
 
     def process(self, file: str, processModel: ProcessModel) -> Optional[str]:
-        if processModel._convert:
-            return self.convert(file, processModel._target, processModel._targetPlatform, processModel._rename)
+        if processModel.convert:
+            return self.convert(file, processModel.target, processModel.targetPlatform, processModel.rename)
         else:
-            return self.rename(file, processModel._target)
+            return self.rename(file, processModel.target)
 
     def _convert(self, data: str, mac2pc: bool) -> str:
         if mac2pc:
@@ -66,7 +80,7 @@ class Converter:
         return data
 
     def rename(self, filename: str, output_directory: str) -> Optional[str]:
-        _, tail = os.path.split(filename)
+        _, tail = path.split(filename)
         short_name = None
 
         with open(filename, 'rb') as fh:
@@ -76,7 +90,7 @@ class Converter:
                 short_name = self.create_short_name(tail, data)
                 break
         outname = output_directory + '/' + short_name
-        if os.path.isfile(outname):
+        if path.isfile(outname):
             print(f"{outname} already exists.\r\n\r\n")
             self.signals.info.emit(f"{outname} already exists.")
             return None
@@ -103,19 +117,19 @@ class Converter:
         with open(filename, 'rb') as fh:
             content = PSARC().parse_stream(fh)
 
-        _, tail = os.path.split(outname)
+        _, tail = path.split(outname)
         short_name = None
 
         new_content = {}
-        for path, data in content.items():
-            if path.endswith('aggregategraph.nt'):
+        for filepath, data in content.items():
+            if filepath.endswith('aggregategraph.nt'):
                 data = self._convert(data.decode(), mac2pc)
                 if mac2pc:
                     data = data.replace('macos', 'dx9').encode('ascii')
                 else:
                     data = data.replace('dx9', 'macos').encode('ascii')
-            new_content[self._convert(path, mac2pc)] = data
-            if use_shortnames and not short_name and path.endswith('.hsan'):
+            new_content[self._convert(filepath, mac2pc)] = data
+            if use_shortnames and not short_name and filepath.endswith('.hsan'):
                 short_name = self.create_short_name(tail, data)
 
         outname = output_directory + '/'
@@ -123,7 +137,7 @@ class Converter:
             outname += short_name
         else:
             outname += tail
-        if os.path.isfile(outname):
+        if path.isfile(outname):
             print(f"{outname} already exists.\r\n\r\n")
             self.signals.info.emit(f"{outname} already exists.")
             return None
@@ -140,17 +154,17 @@ class Converter:
                 yield value
 
     def create_short_name(self, original:str, data:str) -> str:
-        data_dict = json.loads(data)
+        data_dict = loads(data)
         artist = list(self.find_by_key(data_dict, "ArtistName"))[0]
         song = list(self.find_by_key(data_dict, "SongName"))[0]
         dd = False
         if 'dd_' in original.lower():
             dd = True
         if len(artist) > 10:
-            artist = re.sub("[^A-Za-z]+", '', artist)[:10]
+            artist = sub("[^A-Za-z]+", '', artist)[:10]
         max_song_length = 10+(10-len(artist))
         if len(song) > max_song_length:
-            song = re.sub("[^A-Za-z]+", '', song)[:max_song_length]
+            song = sub("[^A-Za-z]+", '', song)[:max_song_length]
         if dd:
             song += "DD"
         short_name = f"{artist}-{song}" + original[-8:]
@@ -161,9 +175,12 @@ class Converter:
 class ConvertService:
     def __init__(self) -> None:
         self.threadpool = QtCore.QThreadPool()
-        self.listWidgetSignals = WorkerSignals()
+        self.threadSignals = WorkerSignals()
 
     def process(self, processModel: ProcessModel) -> None:
-        for file in processModel._files:
-            worker = _Worker(self.listWidgetSignals, file, processModel)
+        waiterProcess = _WorkerWaiter(self.threadSignals, self.threadpool, processModel)
+        self.threadSignals.startProcess.emit()
+        for file in processModel.files:
+            worker = _Worker(self.threadSignals, file, processModel)
             self.threadpool.start(worker)
+        waiterProcess.start()
