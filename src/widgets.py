@@ -28,6 +28,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.initProcessing()
         if files:
             self.setFilesList(files)
+        self.forceShowWindow()
+
+    def forceShowWindow(self):
+        self.setWindowFlags(self.windowFlags() &
+                            QtCore.Qt.WindowStaysOnTopHint)
+        self.show()
+        self.setWindowFlags(self.windowFlags() & ~
+                            QtCore.Qt.WindowStaysOnTopHint)
+
 
     def setupUiSignals(self) -> None:
         self.pushButtonSelectTarget.clicked.connect(
