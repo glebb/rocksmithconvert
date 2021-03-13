@@ -12,7 +12,7 @@ from autoprocess import AutoProcessor
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     settings = QtCore.QSettings("gui.ini", QtCore.QSettings.IniFormat)
 
-    def __init__(self, *args, obj=None, **kwargs) -> None:
+    def __init__(self, *args, files=None, **kwargs) -> None:
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.setStyleSheet(
@@ -26,6 +26,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.setupUiSignals()
         self.setupCustomSignals()
         self.initProcessing()
+        if files:
+            self.setFilesList(files)
 
     def setupUiSignals(self) -> None:
         self.pushButtonSelectTarget.clicked.connect(

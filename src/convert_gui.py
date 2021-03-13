@@ -21,10 +21,6 @@ if __name__ == "__main__":
     files = parseFilesFromArguments()
 
     app = QtWidgets.QApplication(sys.argv)
-    window = MainWindow()
-
-    if files:
-        window.setFilesList(files)
-
+    window = MainWindow(files=files)
     forceShowWindow(window)
     app.exec()

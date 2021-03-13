@@ -26,19 +26,23 @@ class _Worker(QtCore.QRunnable):
     @QtCore.pyqtSlot()
     def run(self) -> None:
         tryCount = 0
-        while Path(self.file).stat().st_size == 0:
-            sleep(1)
-            print(f'Waiting for file {self.file}...')
-            tryCount += 1
-            if tryCount > 20:
-                self.listWidgetSignals.info.emit(f"Failed processing {self.file}. File size was 0.")
-                name = None
-        try:
-            name = self.converter.process(self.file, self.processModel)
-        except:
-            self.listWidgetSignals.info.emit(f"Failed processing {self.file}.")
-            self.listWidgetSignals.info.emit(f"Unexpected error: {traceback.format_exc()}")
+        if not os.path.isfile(self.file):
             name = None
+            self.listWidgetSignals.info.emit(f"File does not exist: {self.file}.")
+        else:
+            while Path(self.file).stat().st_size == 0:
+                sleep(1)
+                print(f'Waiting for file {self.file}...')
+                tryCount += 1
+                if tryCount > 20:
+                    self.listWidgetSignals.info.emit(f"Failed processing {self.file}. File size was 0.")
+                    name = None
+            try:
+                name = self.converter.process(self.file, self.processModel)
+            except:
+                self.listWidgetSignals.info.emit(f"Failed processing {self.file}.")
+                self.listWidgetSignals.info.emit(f"Unexpected error: {traceback.format_exc()}")
+                name = None
         self.listWidgetSignals.finished.emit({'original': self.file, 'processed': name})
 
 
