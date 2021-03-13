@@ -92,6 +92,12 @@
         <layout class="QVBoxLayout" name="verticalLayoutRight">
          <item>
           <widget class="QPlainTextEdit" name="plainTextEdit">
+           <property name="autoFillBackground">
+            <bool>true</bool>
+           </property>
+           <property name="lineWrapMode">
+            <enum>QPlainTextEdit::NoWrap</enum>
+           </property>
            <property name="textInteractionFlags">
             <set>Qt::TextSelectableByMouse</set>
            </property>
@@ -113,10 +119,10 @@
             <bool>false</bool>
            </property>
            <property name="autoFillBackground">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
            <property name="styleSheet">
-            <string notr="true">padding: 3px </string>
+            <string notr="true"/>
            </property>
            <property name="frameShadow">
             <enum>QFrame::Sunken</enum>
@@ -165,12 +171,10 @@ p, li { white-space: pre-wrap; }
             </size>
            </property>
            <property name="autoFillBackground">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="styleSheet">
-            <string notr="true">
-background-color: white;
-color: black;</string>
+            <string notr="true"/>
            </property>
            <layout class="QGridLayout" name="gridLayout">
             <item row="1" column="0">
@@ -181,9 +185,11 @@ color: black;</string>
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="autoFillBackground">
+               <bool>true</bool>
+              </property>
               <property name="styleSheet">
-               <string notr="true">background-color: white;
-color: black;</string>
+               <string notr="true"/>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_3">
                <item>
@@ -229,11 +235,11 @@ color: black;</string>
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="autoFillBackground">
+               <bool>true</bool>
+              </property>
               <property name="styleSheet">
-               <string notr="true">text-align: right;
-padding: 2px;
-color: black;
-background-color: white;</string>
+               <string notr="true"/>
               </property>
               <item>
                <property name="text">
@@ -284,10 +290,11 @@ background-color: white;</string>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="autoFillBackground">
+            <bool>true</bool>
+           </property>
            <property name="styleSheet">
-            <string notr="true">
-background-color: white;
-color: black;</string>
+            <string notr="true"/>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_4">
             <item>
