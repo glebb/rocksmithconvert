@@ -201,5 +201,7 @@ if __name__ == "__main__":
     window = MainWindow()
     if args.files:
         window.setFilesList(args.files)
+    window.setWindowFlags(window.windowFlags() & QtCore.Qt.WindowStaysOnTopHint)
     window.show()
     app.exec()
+    window.setWindowFlags(window.windowFlags() & ~QtCore.Qt.WindowStaysOnTopHint)
