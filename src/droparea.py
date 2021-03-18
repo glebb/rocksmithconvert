@@ -17,7 +17,7 @@ class DropArea(QFrame):
     def dropEvent(self, event: QEvent):
         mimeData = event.mimeData()
         if mimeData.hasUrls():
-            self.filesDropped.emit([url.path() for url in mimeData.urls()])
+            self.filesDropped.emit([url.toLocalFile() for url in mimeData.urls()])
             event.acceptProposedAction()
 
     def dragLeaveEvent(self, event: QEvent):
