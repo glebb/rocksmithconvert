@@ -15,7 +15,7 @@ class MainWindowController(QObject):
         self.ap = AutoProcessor()
         self.setupMainWindowSignals()
         self.setupServiceSignals()
-        self.initProcessing()
+        self.initProcessing(files)
 
     def setupMainWindowSignals(self):
         self.window.checkBoxAutoProcess.stateChanged.connect(
@@ -38,7 +38,9 @@ class MainWindowController(QObject):
         self.ap.folderNotSet.connect(self.openSelectSourceDialog)
         self.ap.filesAdded.connect(self.processFiles)
 
-    def initProcessing(self):
+    def initProcessing(self, files):
+        if files:
+            self.processFiles(files)
         if self.window.checkBoxAutoProcess.isChecked():
             self.ap.autoProcessFolder = self.window.pushButtonSelectSource.toolTip()
             self.ap.start()
