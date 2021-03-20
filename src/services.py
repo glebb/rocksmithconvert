@@ -178,6 +178,10 @@ class ConvertService:
         self.threadSignals = WorkerSignals()
 
     def process(self, processModel: ProcessModel) -> None:
+        if not path.isdir(processModel.target):
+            self.threadSignals.info.emit("No target folder set.")
+            self.threadSignals.info.emit("ABORTED")
+            return
         waiterProcess = _WorkerWaiter(self.threadSignals, self.threadpool, processModel)
         self.threadSignals.startProcess.emit()
         for file in processModel.files:

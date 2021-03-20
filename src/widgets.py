@@ -4,6 +4,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 from mainwindow import Ui_MainWindow
 import settings
 import files_and_folders
+from datetime import datetime
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -23,7 +24,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             if defaultFolder:
                 self.pushButtonSelectTarget.setText(files_and_folders.shortenFolder(defaultFolder))
                 self.pushButtonSelectTarget.setToolTip(defaultFolder)
+        self.plainTextEdit.appendHtml(f'Process log {self.timestamp()}')
         self.forceShowWindow()
+
+    def timestamp(self) -> str:
+        return datetime.now().strftime("%m/%d/%y %H:%M:%S")
 
     def forceShowWindow(self):
         self.setWindowFlags(self.windowFlags() &
@@ -70,10 +75,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.checkBoxAutoProcess.setEnabled(mode)
 
     def setFileList(self, files: List[str]):
-        if not self.checkBoxAutoProcess.isChecked():
-                self.plainTextEdit.clear()
-        else:
-            self.plainTextEdit.appendHtml('<br>')  
+        self.plainTextEdit.appendHtml('<br>')  
 
         self.plainTextEdit.appendHtml(
             "<p><strong>Source files:</strong></p>")
