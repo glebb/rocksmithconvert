@@ -2,7 +2,7 @@ from os import path
 from typing import Dict, List
 from PyQt5 import QtWidgets, QtCore, QtGui
 from mainwindow import Ui_MainWindow
-import settings
+from settings import SettingsHandler
 import files_and_folders
 from datetime import datetime
 
@@ -15,7 +15,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.setStyleSheet(
             "#MainWindow{background-image:  url(:/assets/assets/snow.jpg); border : 0px}")
-        settings.loadSettings(self.settings)
+        self.settingsHandler = SettingsHandler(settings = QtCore.QSettings("gui.ini", QtCore.QSettings.IniFormat))
+        self.settingsHandler.loadSettings()
         self.setTargetPlatformState(self.checkBoxConvert.isChecked())
         self.messageBox: QtWidgets.QMessageBox = QtWidgets.QMessageBox()
         self.checkBoxConvert.stateChanged.connect(self.setTargetPlatformState)
@@ -38,7 +39,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                             QtCore.Qt.WindowStaysOnTopHint)
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
-        settings.saveSettings(self.settings)
+        self.settingsHandler.saveSettings()
         QtWidgets.QMainWindow.closeEvent(self, event)
 
     def openSelectTargetDialog(self, target: str = "") -> None:
@@ -81,7 +82,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             "<p><strong>Source files:</strong></p>")
         names = [path.split(filename)[1] for filename in files]
         for name in names:
-            self.plainTextEdit.appendHtml(f"{name}")        
+            self.plainTextEdit.appendHtml(f"{name}")
+        self.progressBar.count = 0        
 
     @QtCore.pyqtSlot(str)
     def writeInfo(self, info) -> None:
@@ -96,8 +98,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     @QtCore.pyqtSlot(dict)
     def updateProgress(self, file: Dict[str, str]) -> None:
-        self.progressBar.setValue(
-            self.progressBar.value() + round(100/int(file['count'])))
+        self.progressBar.count += 1
+        print(self.progressBar.value())
+        self.progressBar.setValue(round(self.progressBar.count/int(file['count']) * 100))
         if file['processed']:
             _, tail = path.split(file['processed'])
             self.plainTextEdit.appendHtml(f"{tail}")

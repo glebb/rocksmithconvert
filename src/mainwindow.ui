@@ -73,7 +73,7 @@
       </property>
       <layout class="QGridLayout" name="gridLayout_4">
        <item row="1" column="0" colspan="4">
-        <widget class="QProgressBar" name="progressBar">
+        <widget class="MyProgress" name="progressBar">
          <property name="autoFillBackground">
           <bool>false</bool>
          </property>
@@ -331,6 +331,11 @@ p, li { white-space: pre-wrap; }
    <extends>QFrame</extends>
    <header location="global">droparea.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>MyProgress</class>
+   <extends>QProgressBar</extends>
+   <header location="global">myprogress.h</header>
   </customwidget>
  </customwidgets>
  <resources>

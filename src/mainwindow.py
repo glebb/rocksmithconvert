@@ -40,7 +40,7 @@ class Ui_MainWindow(object):
         self.frameDropArea.setObjectName("frameDropArea")
         self.gridLayout_4 = QtWidgets.QGridLayout(self.frameDropArea)
         self.gridLayout_4.setObjectName("gridLayout_4")
-        self.progressBar = QtWidgets.QProgressBar(self.frameDropArea)
+        self.progressBar = MyProgress(self.frameDropArea)
         self.progressBar.setAutoFillBackground(False)
         self.progressBar.setStyleSheet("padding: 3px;")
         self.progressBar.setProperty("value", 0)
@@ -189,6 +189,7 @@ class Ui_MainWindow(object):
         self.checkBoxAutoProcess.setText(_translate("MainWindow", "Auto-process:"))
         self.pushButtonSelectSource.setText(_translate("MainWindow", "Select auto-process folder"))
 from droparea import DropArea
+from myprogress import MyProgress
 import resources_rc
 
 

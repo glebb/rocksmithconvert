@@ -3,7 +3,7 @@ from typing import List
 from autoprocess import AutoProcessor
 from models import ProcessModel
 from services import ConvertService
-from widgets import MainWindow
+from mywindow import MainWindow
 from PyQt5.QtCore import pyqtSlot, QObject
 
 
