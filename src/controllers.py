@@ -3,14 +3,14 @@ from typing import List
 from autoprocess import AutoProcessor
 from models import ProcessModel
 from services import ConvertService
-from mywindow import MainWindow
+from mywindow import MyWindow
 from PyQt5.QtCore import pyqtSlot, QObject
 
 
 class MainWindowController(QObject):
     def __init__(self, files: List[str]):
         super(MainWindowController, self).__init__()
-        self.window = MainWindow()
+        self.window = MyWindow()
         self.convertService = ConvertService()
         self.ap = AutoProcessor()
         self.setupMainWindowSignals()

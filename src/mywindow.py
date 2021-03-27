@@ -7,11 +7,11 @@ import files_and_folders
 from datetime import datetime
 
 
-class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
+class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     settings = QtCore.QSettings("gui.ini", QtCore.QSettings.IniFormat)
 
     def __init__(self, *args, obj=None, **kwargs) -> None:
-        super(MainWindow, self).__init__(*args, **kwargs)
+        super(MyWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.setStyleSheet(
             "#MainWindow{background-image:  url(:/assets/assets/snow.jpg); border : 0px}")
@@ -25,7 +25,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             if defaultFolder:
                 self.pushButtonSelectTarget.setText(files_and_folders.shortenFolder(defaultFolder))
                 self.pushButtonSelectTarget.setToolTip(defaultFolder)
-        self.plainTextEdit.appendHtml(f'Process log {self.timestamp()}')
         self.forceShowWindow()
 
     def timestamp(self) -> str:
@@ -76,10 +75,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.checkBoxAutoProcess.setEnabled(mode)
 
     def setFileList(self, files: List[str]):
-        self.plainTextEdit.appendHtml('<br>')  
-
         self.plainTextEdit.appendHtml(
-            "<p><strong>Source files:</strong></p>")
+            f"<strong>Source files {self.timestamp()}:</strong>")
         names = [path.split(filename)[1] for filename in files]
         for name in names:
             self.plainTextEdit.appendHtml(f"{name}")
@@ -93,7 +90,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.pyqtSlot()
     def process(self) -> None:
         self.allowUserInteraction(False)
-        self.plainTextEdit.appendHtml("<br><p><strong>Process log:</strong></p>")
+        self.plainTextEdit.appendHtml(f'<br><strong>Process log {self.timestamp()}:</strong>')
         self.progressBar.setValue(0)
 
     @QtCore.pyqtSlot(dict)
@@ -117,6 +114,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.pyqtSlot(int)
     def finishedProcessing(self, count) -> None:
         self.progressBar.setValue(100)
-        self.plainTextEdit.appendHtml(f"Finished processing {count} files.")
+        self.plainTextEdit.appendHtml(f"<strong>Finished processing {count} files {self.timestamp()}</strong><br>")
         self.allowUserInteraction(True)
 
