@@ -31,6 +31,10 @@ without any user interaction. You can use it to scan Downloads folder and automa
 files dlc/cdlc folder. It doesn't matter what files are in the source folder, only files that are
 not in target already will be processed.
 
+If you don't use autoprocessing, you can just drop the files on the app while it's running to invoke processing.
+Additionally you can drop files directly on the app icon (e.g. on Dock) while holding down cmd (Option) before you start the drag.
+This will open the app and automatically process the files.
+
 If source folder contains both pc (_p.psarc) and mac (_m.psarc) files, the processor picks all of them
 and either copies or converts the files based on platform selection to the target folder.
 
@@ -55,9 +59,7 @@ with Windows though!)
 The basic idea is to use pyrocksmith to parse the files and
 bundle everything to a nice and clean standalone osx app without additional
 dependencies. Batteries included. This is achieved
-by using pyinstaller to create a single executable from PyQt app and then Platypus to 
-bundle it as an osx app. Platypus packaging is used only for convenience,
-to allow dropping files straight on top of the app icon, which pyinstaller doesn't seem to handle easily.
+by using pyinstaller to create a single executable from PyQt app.
 
 ### Requirements ###
 * Qt 5
@@ -66,17 +68,17 @@ to allow dropping files straight on top of the app icon, which pyinstaller doesn
       * PyQt5
       * pyinstaller (https://pypi.org/project/pyinstaller/)
       * git+https://github.com/0x0L/rocksmith.git
-* Platypus (https://sveinbjorn.org/platypus)
 
 ### UI ###
 Qt Creator is used to handle the master .ui and resource files and those should always be up to date (no manual changes to generated python files). 
 To convert "qt" files to python source, use pyuic and pyrcc (e.g. `pyuic5 -x mainwindow.ui -o mainwindow.py`, `pyrcc5 resources.qrc -o resources_rc.py`)
 
 ### Making convert_gui.py as standalone executable ###
-Running `pyinstaller --name 'RSConvert_GUI' --onefile src/convert_gui.py --clean` creates an executable under .dist/.
-Include this file in Platypus bundle so the script can access it.
-
-### Creating osx app with Platypus ###
-Rocksmith 2014 CDLC convert pc mac platypus profile and make sure you have "RSConvert_GUI" executable included in the bundle. Also make sure the script points to the provided Script.sh. Then just create the app.
+Running `pyinstaller --name 'RSConvert_GUI' --onefile src/convert_gui.py --clean --icon=docs/rsconvert.icns` creates an executable under .dist/.
 
 
+## TODO for version 2.0 ##
+* Save settings on cmd-q
+* Tests
+* Autoscrolling of log
+* Check dropping on icon without target set
