@@ -78,7 +78,4 @@ Running `pyinstaller --name 'RSConvert_GUI' --onefile src/convert_gui.py --clean
 
 
 ## TODO for version 2.0 ##
-* Save settings on cmd-q
 * Tests
-* Autoscrolling of log
-* Check dropping on icon without target set

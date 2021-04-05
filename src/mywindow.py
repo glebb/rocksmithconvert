@@ -18,8 +18,10 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.settingsHandler = SettingsHandler(settings = QtCore.QSettings("gui.ini", QtCore.QSettings.IniFormat))
         self.settingsHandler.loadSettings()
         self.setTargetPlatformState(self.checkBoxConvert.isChecked())
-        self.messageBox: QtWidgets.QMessageBox = QtWidgets.QMessageBox()
         self.checkBoxConvert.stateChanged.connect(self.setTargetPlatformState)
+        self.checkBoxRename.stateChanged.connect(self.saveSettings)
+        self.checkBoxAutoProcess.stateChanged.connect(self.saveSettings)
+        self.comboBoxPlatform.currentTextChanged.connect(self.saveSettings)
         if not self.pushButtonSelectTarget.toolTip():
             defaultFolder = files_and_folders.tryGetDefaultRocksmithPath()
             if defaultFolder:
@@ -48,6 +50,7 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if directory:
             self.pushButtonSelectTarget.setText(files_and_folders.shortenFolder(directory))
             self.pushButtonSelectTarget.setToolTip(directory)
+            self.settingsHandler.saveSettings()
 
     def openSelectSourceDialog(self, source: str = "") -> None:
         options = QtWidgets.QFileDialog.Options()
@@ -56,6 +59,7 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if directory:
             self.pushButtonSelectSource.setText(files_and_folders.shortenFolder(directory))
             self.pushButtonSelectSource.setToolTip(directory)
+            self.settingsHandler.saveSettings()
         elif not directory and not self.pushButtonSelectSource.toolTip():
             self.checkBoxAutoProcess.setCheckState(0)
 
@@ -64,6 +68,8 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.checkBoxAutoProcess.setCheckState(0)
         self.pushButtonSelectSource.setText('Select auto-process folder')
         self.pushButtonSelectSource.setToolTip('')
+        self.settingsHandler.saveSettings()
+
 
     def allowUserInteraction(self, mode: bool) -> None:
         self.frameDropArea.setAcceptDrops(mode)
@@ -81,11 +87,13 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         for name in names:
             self.plainTextEdit.appendHtml(f"{name}")
         self.progressBar.count = 0        
+        self.plainTextEdit.ensureCursorVisible()
 
     @QtCore.pyqtSlot(str)
     def writeInfo(self, info) -> None:
         self.plainTextEdit.appendHtml(
             f"<span style='color: red'>{info}</span>")
+        self.plainTextEdit.ensureCursorVisible()
 
     @QtCore.pyqtSlot()
     def process(self) -> None:
@@ -96,11 +104,11 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.pyqtSlot(dict)
     def updateProgress(self, file: Dict[str, str]) -> None:
         self.progressBar.count += 1
-        print(self.progressBar.value())
         self.progressBar.setValue(round(self.progressBar.count/int(file['count']) * 100))
         if file['processed']:
             _, tail = path.split(file['processed'])
-            self.plainTextEdit.appendHtml(f"{tail}")
+            self.plainTextEdit.appendHtml(f"OK: {tail}")
+        self.plainTextEdit.ensureCursorVisible()
 
     @QtCore.pyqtSlot(int)
     def setTargetPlatformState(self, state: int) -> None:
@@ -110,10 +118,16 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         else:
             self.comboBoxPlatform.setDisabled(True)
             self.comboBoxPlatform.setVisible(False)
+        self.settingsHandler.saveSettings()
+
+    @QtCore.pyqtSlot()
+    def saveSettings(self) -> None:
+        self.settingsHandler.saveSettings()
 
     @QtCore.pyqtSlot(int)
     def finishedProcessing(self, count) -> None:
         self.progressBar.setValue(100)
-        self.plainTextEdit.appendHtml(f"<strong>Finished processing {count} files {self.timestamp()}</strong><br>")
+        self.plainTextEdit.appendHtml(f"<strong>Finished processing {count} files</strong><br>")
+        self.plainTextEdit.ensureCursorVisible()
         self.allowUserInteraction(True)
 
