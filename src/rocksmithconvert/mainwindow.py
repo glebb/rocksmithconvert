@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.3
+# Created by: PyQt5 UI code generator 5.13.0
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -188,9 +188,9 @@ class Ui_MainWindow(object):
         self.labelTarget.setText(_translate("MainWindow", "Target:"))
         self.checkBoxAutoProcess.setText(_translate("MainWindow", "Auto-process:"))
         self.pushButtonSelectSource.setText(_translate("MainWindow", "Select auto-process folder"))
-from droparea import DropArea
-from myprogress import MyProgress
-import resources_rc
+from rocksmithconvert.droparea import DropArea
+from rocksmithconvert.myprogress import MyProgress
+from rocksmithconvert import resources_rc
 
 
 if __name__ == "__main__":

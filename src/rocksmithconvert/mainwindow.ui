@@ -329,13 +329,13 @@ p, li { white-space: pre-wrap; }
   <customwidget>
    <class>DropArea</class>
    <extends>QFrame</extends>
-   <header location="global">droparea.h</header>
+   <header location="global">rocksmithconvert/droparea.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>MyProgress</class>
    <extends>QProgressBar</extends>
-   <header location="global">myprogress.h</header>
+   <header location="global">rocksmithconvert/myprogress.h</header>
   </customwidget>
  </customwidgets>
  <resources>

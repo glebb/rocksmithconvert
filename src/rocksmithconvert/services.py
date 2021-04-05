@@ -6,7 +6,7 @@ from typing import Optional
 from PyQt5 import QtCore
 from shutil import copyfile
 from rocksmith.psarc import PSARC
-from models import ProcessModel
+from rocksmithconvert.models import ProcessModel
 from pathlib import Path
 from time import sleep
 

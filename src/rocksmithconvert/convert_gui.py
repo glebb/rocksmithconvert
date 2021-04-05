@@ -1,7 +1,7 @@
 import sys
 from argparse import ArgumentParser
 from PyQt5 import QtWidgets
-from controllers import MainWindowController
+from rocksmithconvert.controllers import MainWindowController
 from os import environ
 
 environ['QT_MAC_WANTS_LAYER'] = '1'

@@ -1,9 +1,9 @@
 from os import path
 from typing import List
-from autoprocess import AutoProcessor
-from models import ProcessModel
-from services import ConvertService
-from mywindow import MyWindow
+from rocksmithconvert.autoprocess import AutoProcessor
+from rocksmithconvert.models import ProcessModel
+from rocksmithconvert.services import ConvertService
+from rocksmithconvert.mywindow import MyWindow
 from PyQt5.QtCore import pyqtSlot, QObject
 
 

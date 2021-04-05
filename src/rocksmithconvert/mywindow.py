@@ -1,9 +1,9 @@
 from os import path
 from typing import Dict, List
 from PyQt5 import QtWidgets, QtCore, QtGui
-from mainwindow import Ui_MainWindow
-from settings import SettingsHandler
-import files_and_folders
+from rocksmithconvert.mainwindow import Ui_MainWindow
+from rocksmithconvert.settings import SettingsHandler
+from rocksmithconvert import files_and_folders
 from datetime import datetime
 
 
