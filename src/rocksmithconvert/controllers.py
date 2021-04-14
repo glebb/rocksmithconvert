@@ -1,6 +1,7 @@
 from os import path
 from typing import List
 from rocksmithconvert.autoprocess import AutoProcessor
+from rocksmithconvert.files_and_folders import filterAndSortPsarcFiles
 from rocksmithconvert.models import ProcessModel
 from rocksmithconvert.services import ConvertService
 from rocksmithconvert.mywindow import MyWindow
@@ -61,10 +62,9 @@ class MainWindowController(QObject):
 
     @pyqtSlot(list)
     def processFiles(self, files: List[str]) -> None:
-        filesList = [file for file in files if file.endswith('.psarc')]
+        filesList = filterAndSortPsarcFiles(files)
         if len(filesList) == 0:
             return
-        filesList.sort()
         model = ProcessModel(
             self.window.checkBoxConvert.isChecked(),
             self.window.checkBoxRename.isChecked(),

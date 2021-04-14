@@ -63,11 +63,16 @@ by using pyinstaller to create a single executable from PyQt app.
 
 ### Requirements ###
 * Qt 5
-* Python 3.6:
+* Python 3.6+:
    * `pip install -r requirements.txt`:
       * PyQt5
       * pyinstaller (https://pypi.org/project/pyinstaller/)
       * git+https://github.com/0x0L/rocksmith.git
+
+### Testing ###
+Install dependencies: `pip install -r requirements-dev.txt`
+Install as a local package: `pip install -e .`
+Run tests: `py.test`
 
 ### UI ###
 Qt Creator is used to handle the master .ui and resource files and those should always be up to date (no manual changes to generated python files). 
@@ -75,7 +80,3 @@ To convert "qt" files to python source, use pyuic and pyrcc (e.g. `pyuic5 -x mai
 
 ### Making convert_gui.py as standalone executable ###
 Running `pyinstaller --name 'RSConvert_GUI' --onefile src/convert_gui.py --clean --icon=docs/rsconvert.icns` creates an executable under .dist/.
-
-
-## TODO for version 2.0 ##
-* Tests
