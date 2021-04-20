@@ -339,12 +339,7 @@ p, li { white-space: pre-wrap; }
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="resources.qrc"/>
+  <include location="rocksmithconvert.resources.qrc"/>
  </resources>
  <connections/>
- <slots>
-  <slot>selectTargetClicked()</slot>
-  <slot>selectedFiles()</slot>
-  <slot>process()</slot>
- </slots>
 </ui>
