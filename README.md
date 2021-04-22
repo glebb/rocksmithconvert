@@ -71,7 +71,7 @@ by using pyinstaller to create a single executable from PyQt app.
 
 ### Testing ###
 Install dependencies: `pip install -r requirements-dev.txt`
-Install as a local package: `pip install -e .`
+Install as a local package: `pip install -e src/.`
 Run tests: `py.test`
 
 ### UI ###
