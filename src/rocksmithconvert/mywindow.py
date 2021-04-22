@@ -8,14 +8,12 @@ from datetime import datetime
 
 
 class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
-    settings = QtCore.QSettings("gui.ini", QtCore.QSettings.IniFormat)
-
     def __init__(self, *args, obj=None, **kwargs) -> None:
         super(MyWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.setStyleSheet(
             "#MainWindow{background-image:  url(:/assets/assets/snow.jpg); border : 0px}")
-        self.settingsHandler = SettingsHandler(settings = QtCore.QSettings("gui.ini", QtCore.QSettings.IniFormat))
+        self.settingsHandler = SettingsHandler(settings = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, "glebb", "rocksmithconvert"))
         self.settingsHandler.loadSettings()
         self.setTargetPlatformState(self.checkBoxConvert.isChecked())
         self.checkBoxConvert.stateChanged.connect(self.setTargetPlatformState)

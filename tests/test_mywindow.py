@@ -3,15 +3,14 @@ import pytest
 from rocksmithconvert.controllers import MainWindowController
 from unittest.mock import MagicMock
 from unittest.mock import patch
-
 from rocksmithconvert.models import ProcessModel
 
 
 @pytest.fixture()
 def widget(mocker):
-	widget = MainWindowController([])
 	mocker.patch('rocksmithconvert.settings.SettingsHandler.saveSettings')
 	mocker.patch('rocksmithconvert.settings.SettingsHandler.loadSettings')
+	widget = MainWindowController([])
 	widget.convertService.process = MagicMock()
 	return widget
 
