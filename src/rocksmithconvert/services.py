@@ -135,9 +135,9 @@ class _Converter:
             if filepath.endswith('aggregategraph.nt'):
                 data = self._convert(data.decode(), mac2pc)
                 if mac2pc:
-                    data = data.replace('macos', 'dx9').encode('utf-8')
+                    data = data.replace('macos', 'dx9').encode('ascii')
                 else:
-                    data = data.replace('dx9', 'macos').encode('utf-8')
+                    data = data.replace('dx9', 'macos').encode('ascii')
             new_content[self._convert(filepath, mac2pc)] = data
             if use_shortnames and not short_name and filepath.endswith('.hsan'):
                 short_name = self._create_short_name(tail, data)
