@@ -60,12 +60,11 @@ The basic idea is to use pyrocksmith to parse the files and
 bundle everything to a nice and clean standalone osx app without additional
 dependencies. Batteries included. This is achieved
 by using pyinstaller to create a single executable from PyQt app.
-
 ### Requirements ###
 * Qt 5
 * Python 3.6+:
    * `pip install -r requirements.txt`:
-      * PyQt5
+      * PyQt5 (latest version which works in osx 10.12 is 5.13.2)
       * pyinstaller (https://pypi.org/project/pyinstaller/)
       * git+https://github.com/0x0L/rocksmith.git
 
@@ -79,4 +78,8 @@ Qt Creator is used to handle the master .ui and resource files and those should 
 To convert "qt" files to python source, use pyuic and pyrcc (e.g. `pyuic5 -x mainwindow.ui -o mainwindow.py`, `pyrcc5 resources.qrc -o resources_rc.py`)
 
 ### Making convert_gui.py as standalone executable ###
-Running `pyinstaller --name 'RSConvert_GUI' --windowed --onefile src/convert_gui.py --clean --icon=docs/rsconvert.icns ` creates an executable under .dist/.
+Running `pyinstaller --name 'RSConvert_GUI' --windowed --onefile src/rocksmithconvert/convert_gui.py --clean --icon=docs/rsconvert.icns ` creates an executable under .dist/.
+
+### Misc ###
+env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 3.9.9
+

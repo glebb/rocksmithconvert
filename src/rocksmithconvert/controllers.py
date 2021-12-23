@@ -12,6 +12,7 @@ class MainWindowController(QObject):
     def __init__(self, files: List[str]):
         super(MainWindowController, self).__init__()
         self.window = MyWindow()
+        self.window.setWindowTitle(self.window.windowTitle() + " 2.1")
         self.convertService = ConvertService()
         self.ap = AutoProcessor()
         self.setupMainWindowSignals()
@@ -21,10 +22,14 @@ class MainWindowController(QObject):
     def setupMainWindowSignals(self):
         self.window.checkBoxAutoProcess.stateChanged.connect(
             self.autoProcessStateChanged)
+        self.window.checkBoxAutoProcess.stateChanged.connect(self.window.saveSettings)
         self.window.frameDropArea.filesDropped.connect(self.processFiles)
         self.window.pushButtonSelectTarget.clicked.connect(self.selectTargetFolder)
         self.window.pushButtonSelectSource.clicked.connect(
             self.openSelectSourceDialog)
+        self.window.pushButtonSelectTarget.clicked.connect(self.window.saveSettings)
+        self.window.pushButtonSelectSource.clicked.connect(
+            self.window.saveSettings)
 
 
     def setupServiceSignals(self):
@@ -32,6 +37,7 @@ class MainWindowController(QObject):
             self.window.finishedProcessing)
 
         self.convertService.threadSignals.startProcess.connect(self.window.process)
+        self.convertService.threadSignals.startProcess.connect(self.window.saveSettings)
         self.convertService.threadSignals.update.connect(
             self.window.updateProgress)
         self.convertService.threadSignals.info.connect(
@@ -66,11 +72,10 @@ class MainWindowController(QObject):
         if len(filesList) == 0:
             return
         model = ProcessModel(
-            self.window.checkBoxConvert.isChecked(),
-            self.window.checkBoxRename.isChecked(),
             filesList,
             self.window.pushButtonSelectTarget.toolTip(),
-            self.window.comboBoxPlatform.currentText()
+            self.window.comboBoxPlatform.currentText(),
+            self.window.comboBoxRename.currentText()
         )
         self.window.setFileList(filesList)
         self.convertService.process(model)

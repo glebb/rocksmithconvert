@@ -88,22 +88,22 @@ class _Converter:
                 content = PSARC(False).parse_stream(fh)
         return content
 
-    def _do_rename(self, filename: str, output_directory: str) -> Optional[str]:
+    def _do_rename(self, filename: str, output_directory: str, renameScheme: str) -> Optional[str]:
         _, tail = path.split(filename)
-        short_name = None
+        new_name = None
 
         content = self._get_content(filename)
-        for path, data in content.items():
-            if path.endswith('.hsan'):
-                short_name = self._create_short_name(tail, data)
+        for fpath, data in content.items():
+            if fpath.endswith('.hsan'):
+                new_name = self._create_new_filename(tail, data, renameScheme)
                 break
-        outname = output_directory + '/' + short_name
+        outname = output_directory + '/' + new_name
         if path.isfile(outname):
-            error = f"File exists: {short_name}"
+            error = f"File exists: {new_name}"
             self.signals.info.emit(error)
             raise FileExistsError(error)
         copyfile(filename, outname)
-        return short_name
+        return new_name
 
     def _swap_platform(self, filename, targetPlatform):
         temp = filename.lower()
@@ -123,12 +123,12 @@ class _Converter:
             raise ValueError(error)
         return mac2pc, outname
 
-    def _do_conversion(self, filename: str, output_directory: str, targetPlatform: str, use_shortnames: bool = False) -> Optional[str]:
+    def _do_conversion(self, filename: str, output_directory: str, targetPlatform: str, renameScheme: str) -> Optional[str]:
         mac2pc, outputFilename = self._swap_platform(filename, targetPlatform)
         content = self._get_content(filename)
 
         _, tail = path.split(outputFilename)
-        short_name = None
+        new_name = None
 
         new_content = {}
         for filepath, data in content.items():
@@ -139,16 +139,17 @@ class _Converter:
                 else:
                     data = data.replace('dx9', 'macos').encode('utf8')
             new_content[self._convert(filepath, mac2pc)] = data
-            if use_shortnames and not short_name and filepath.endswith('.hsan'):
-                short_name = self._create_short_name(tail, data)
+            if renameScheme != 'Disabled' and not new_name and filepath.endswith('.hsan'):
+                new_name = self._create_new_filename(tail, data, renameScheme)
 
         outputFilename = output_directory + '/'
-        if short_name:
-            outputFilename += short_name
+        if new_name:
+            outputFilename += new_name
         else:
+            new_name = filename
             outputFilename += tail
         if path.isfile(outputFilename):
-            error = f"File exists: {short_name}"
+            error = f"File exists: {new_name}"
             self.signals.info.emit(error)
             raise FileExistsError(error)
 
@@ -164,7 +165,7 @@ class _Converter:
             elif key == target:
                 yield value
 
-    def _create_short_name(self, original: str, data: str) -> str:
+    def _create_new_filename(self, original: str, data: str, renameScheme: str) -> str:
         data_dict = loads(data)
         artist = list(self._find_by_key(data_dict, "ArtistName"))[0]
         song = list(self._find_by_key(data_dict, "SongName"))[0]
@@ -172,9 +173,11 @@ class _Converter:
         if 'dd_' in original.lower():
             dd = True
         if len(artist) > 10:
-            artist = sub("[^A-Za-z]+", '', artist)[:10]
+            artist = sub("[^A-Za-z]+", '', artist)
+            if renameScheme == 'Short':
+                artist = artist[:10]
         max_song_length = 10+(10-len(artist))
-        if len(song) > max_song_length:
+        if renameScheme == 'Short' and len(song) > max_song_length:
             song = sub("[^A-Za-z]+", '', song)[:max_song_length]
         if dd:
             song += "DD"
@@ -183,10 +186,10 @@ class _Converter:
         return "".join(c for c in short_name if c.isalnum() or c in keepcharacters).rstrip()
 
     def process(self, file: str, processModel: ProcessModel) -> Optional[str]:
-        if processModel.convert:
-            return self._do_conversion(file, processModel.target, processModel.targetPlatform, processModel.rename)
-        else:
-            return self._do_rename(file, processModel.target)
+        if processModel.targetPlatform != 'Disabled':
+            return self._do_conversion(file, processModel.target, processModel.targetPlatform, processModel.renameScheme)
+        elif processModel.renameScheme != 'Disabled':
+            return self._do_rename(file, processModel.target, processModel.renameScheme)
 
 
 class ConvertService:

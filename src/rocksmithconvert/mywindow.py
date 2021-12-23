@@ -12,12 +12,9 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         super(MyWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.setStyleSheet(
-            "#MainWindow{background-image:  url(:/assets/assets/snow.jpg); border : 0px}")
+            "#MainWindow{background-image:  url(:/assets/assets/fire.jpg); border : 0px}")
         self.settingsHandler = SettingsHandler(settings = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, "glebb", "rocksmithconvert"))
         self.settingsHandler.loadSettings()
-        self.setTargetPlatformState(self.checkBoxConvert.isChecked())
-        self.checkBoxConvert.stateChanged.connect(self.setTargetPlatformState)
-        self.checkBoxRename.stateChanged.connect(self.saveSettings)
         self.checkBoxAutoProcess.stateChanged.connect(self.saveSettings)
         self.comboBoxPlatform.currentTextChanged.connect(self.saveSettings)
         if not self.pushButtonSelectTarget.toolTip():
@@ -74,8 +71,6 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.pushButtonSelectTarget.setEnabled(mode)
         self.pushButtonSelectSource.setEnabled(mode)
         self.comboBoxPlatform.setEnabled(mode)
-        self.checkBoxConvert.setEnabled(mode)
-        self.checkBoxRename.setEnabled(mode)
         self.checkBoxAutoProcess.setEnabled(mode)
 
     def setFileList(self, files: List[str]):
