@@ -1,5 +1,7 @@
 from PyQt5.QtCore import QEvent, pyqtSignal
 from PyQt5.QtWidgets import QFrame
+import os
+import glob
 
 class DropArea(QFrame):
     filesDropped = pyqtSignal(list)
@@ -17,7 +19,14 @@ class DropArea(QFrame):
     def dropEvent(self, event: QEvent):
         mimeData = event.mimeData()
         if mimeData.hasUrls():
-            self.filesDropped.emit([url.toLocalFile() for url in mimeData.urls()])
+            files = []
+            for url in mimeData.urls():
+                localFile = url.toLocalFile()
+                if os.path.isdir(localFile):
+                    files.extend(glob.iglob(localFile + '**/*.psarc', recursive=True))
+                else:
+                    files.append(localFile)
+            self.filesDropped.emit(files)
             event.acceptProposedAction()
 
     def dragLeaveEvent(self, event: QEvent):

@@ -9,6 +9,7 @@ from rocksmith.psarc import PSARC
 from rocksmithconvert.models import ProcessModel
 from pathlib import Path
 from time import sleep
+import unicodedata
 
 
 class _WorkerSignals(QtCore.QObject):
@@ -183,6 +184,7 @@ class _Converter:
             song += "DD"
         short_name = f"{artist}-{song}" + original[-8:]
         keepcharacters = ('.', '_', '-')
+        short_name = unicodedata.normalize('NFKD', short_name).encode('ASCII', 'ignore').decode()
         return "".join(c for c in short_name if c.isalnum() or c in keepcharacters).rstrip()
 
     def process(self, file: str, processModel: ProcessModel) -> Optional[str]:
