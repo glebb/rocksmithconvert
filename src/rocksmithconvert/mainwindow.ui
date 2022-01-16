@@ -138,6 +138,8 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rename uses the format (artist-song) without special characters and will either shorten the filename to 10+10 characters, or use the full name.&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;To change cdlc app ID, set the desired app ID. If option is disabled, app ID is untouched.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;With auto-processing enabled, the app will check specified folder periodically and execute processing without further user interaction when new files are found. &lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;a href=&quot;https://github.com/glebb/rocksmithconvert&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0068da;&quot;&gt;Github page&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -177,6 +179,71 @@ p, li { white-space: pre-wrap; }
             <string notr="true"/>
            </property>
            <layout class="QGridLayout" name="gridLayout">
+            <item row="12" column="0" colspan="2">
+             <widget class="QPushButton" name="pushButtonSelectTarget">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="autoFillBackground">
+               <bool>false</bool>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">border-color: rgb(0, 0, 0);</string>
+              </property>
+              <property name="text">
+               <string>Select target folder</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="label_3">
+              <property name="text">
+               <string>Change AppID:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>Rename:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label">
+              <property name="text">
+               <string>Convert to:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QComboBox" name="comboBoxRename">
+              <property name="autoFillBackground">
+               <bool>true</bool>
+              </property>
+              <property name="currentText">
+               <string>Disabled</string>
+              </property>
+              <item>
+               <property name="text">
+                <string>Disabled</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Short</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Full</string>
+               </property>
+              </item>
+             </widget>
+            </item>
             <item row="0" column="1">
              <widget class="QComboBox" name="comboBoxPlatform">
               <property name="sizePolicy">
@@ -208,46 +275,20 @@ p, li { white-space: pre-wrap; }
               </item>
              </widget>
             </item>
-            <item row="4" column="0">
-             <widget class="QLabel" name="label_2">
+            <item row="11" column="0">
+             <widget class="QLabel" name="labelTarget">
               <property name="text">
-               <string>Rename:</string>
+               <string>Target:</string>
               </property>
              </widget>
             </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="label">
-              <property name="text">
-               <string>Convert to:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="11" column="0" colspan="2">
-             <widget class="QPushButton" name="pushButtonSelectTarget">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="autoFillBackground">
-               <bool>false</bool>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">border-color: rgb(0, 0, 0);</string>
-              </property>
-              <property name="text">
-               <string>Select target folder</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="1">
-             <widget class="QComboBox" name="comboBoxRename">
-              <property name="autoFillBackground">
+            <item row="5" column="1">
+             <widget class="QComboBox" name="comboBoxAppId">
+              <property name="editable">
                <bool>true</bool>
               </property>
-              <property name="currentText">
-               <string>Disabled</string>
+              <property name="currentIndex">
+               <number>1</number>
               </property>
               <item>
                <property name="text">
@@ -256,21 +297,9 @@ p, li { white-space: pre-wrap; }
               </item>
               <item>
                <property name="text">
-                <string>Short</string>
+                <string>248750</string>
                </property>
               </item>
-              <item>
-               <property name="text">
-                <string>Full</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-            <item row="10" column="0">
-             <widget class="QLabel" name="labelTarget">
-              <property name="text">
-               <string>Target:</string>
-              </property>
              </widget>
             </item>
            </layout>

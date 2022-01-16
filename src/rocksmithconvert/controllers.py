@@ -12,7 +12,7 @@ class MainWindowController(QObject):
     def __init__(self, files: List[str]):
         super(MainWindowController, self).__init__()
         self.window = MyWindow()
-        self.window.setWindowTitle(self.window.windowTitle() + " 2.1")
+        self.window.setWindowTitle(self.window.windowTitle() + " 2.2")
         self.convertService = ConvertService()
         self.ap = AutoProcessor()
         self.setupMainWindowSignals()
@@ -30,6 +30,9 @@ class MainWindowController(QObject):
         self.window.pushButtonSelectTarget.clicked.connect(self.window.saveSettings)
         self.window.pushButtonSelectSource.clicked.connect(
             self.window.saveSettings)
+        self.window.comboBoxAppId.currentIndexChanged.connect(self.window.appIdChange)
+        self.window.comboBoxAppId.currentTextChanged.connect(self.window.appIdTextChange)
+        self.window.comboBoxPlatform.currentIndexChanged.connect(self.window.convertPlatformChanged)
 
 
     def setupServiceSignals(self):
@@ -75,7 +78,8 @@ class MainWindowController(QObject):
             filesList,
             self.window.pushButtonSelectTarget.toolTip(),
             self.window.comboBoxPlatform.currentText(),
-            self.window.comboBoxRename.currentText()
+            self.window.comboBoxRename.currentText(),
+            self.window.comboBoxAppId.currentText()
         )
         self.window.setFileList(filesList)
         self.convertService.process(model)

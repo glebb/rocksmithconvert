@@ -124,7 +124,7 @@ class _Converter:
             raise ValueError(error)
         return mac2pc, outname
 
-    def _do_conversion(self, filename: str, output_directory: str, targetPlatform: str, renameScheme: str) -> Optional[str]:
+    def _do_conversion(self, filename: str, output_directory: str, targetPlatform: str, renameScheme: str, appId: str) -> Optional[str]:
         mac2pc, outputFilename = self._swap_platform(filename, targetPlatform)
         content = self._get_content(filename)
 
@@ -140,6 +140,8 @@ class _Converter:
                 else:
                     data = data.replace('dx9', 'macos').encode('utf8')
             new_content[self._convert(filepath, mac2pc)] = data
+            if appId and filepath.endswith('appid'):
+                new_content[filepath] = appId.encode('utf8')
             if renameScheme != 'Disabled' and not new_name and filepath.endswith('.hsan'):
                 new_name = self._create_new_filename(tail, data, renameScheme)
 
@@ -188,8 +190,11 @@ class _Converter:
         return "".join(c for c in short_name if c.isalnum() or c in keepcharacters).rstrip()
 
     def process(self, file: str, processModel: ProcessModel) -> Optional[str]:
+        appId = None
+        if processModel.appId != 'Disabled':
+            appId = processModel.appId
         if processModel.targetPlatform != 'Disabled':
-            return self._do_conversion(file, processModel.target, processModel.targetPlatform, processModel.renameScheme)
+            return self._do_conversion(file, processModel.target, processModel.targetPlatform, processModel.renameScheme, appId)
         elif processModel.renameScheme != 'Disabled':
             return self._do_rename(file, processModel.target, processModel.renameScheme)
 

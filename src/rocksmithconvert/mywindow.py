@@ -23,6 +23,14 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.pushButtonSelectTarget.setText(files_and_folders.shortenFolder(defaultFolder))
                 self.pushButtonSelectTarget.setToolTip(defaultFolder)
         self.forceShowWindow()
+        if self.comboBoxAppId.currentIndex() == 0:
+            self.comboBoxAppId.setEditable(False)
+        else:
+            self.comboBoxAppId.setEditable(True)
+            self.comboBoxAppId.setItemText(1, self.comboBoxAppId.currentText())
+        if self.comboBoxPlatform.currentIndex() == 0:
+            self.comboBoxAppId.setCurrentIndex(0)
+
 
     def timestamp(self) -> str:
         return datetime.now().strftime("%m/%d/%y %H:%M:%S")
@@ -124,3 +132,21 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.plainTextEdit.ensureCursorVisible()
         self.allowUserInteraction(True)
 
+    @QtCore.pyqtSlot(int)
+    def appIdChange(self, index) -> None:
+        if index == 0:
+            self.comboBoxAppId.setEditable(False)
+        else:
+            self.comboBoxAppId.setEditable(True)
+            
+
+    @QtCore.pyqtSlot(str)
+    def appIdTextChange(self, newText) -> None:
+        if newText != "Disabled":
+            self.comboBoxAppId.setCurrentText(newText)
+            self.comboBoxAppId.setItemText(1, newText)
+
+    @QtCore.pyqtSlot(int)
+    def convertPlatformChanged(self, index) -> None:
+        if index == 0:
+            self.comboBoxAppId.setCurrentIndex(0)

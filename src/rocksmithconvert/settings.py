@@ -9,6 +9,7 @@ class SettingsHandler:
         if isinstance(widget, QtWidgets.QCheckBox) and val == 'checked': return True
         if isinstance(widget, QtWidgets.QLineEdit) and val == 'text': return True
         if isinstance(widget, QtWidgets.QComboBox) and val == 'currentText': return True
+        if isinstance(widget, QtWidgets.QComboBox) and val == 'currentIndex': return True
         if isinstance(widget, QtWidgets.QPushButton) and widget.objectName() == 'pushButtonSelectSource' and val == 'toolTip': return True
         if isinstance(widget, QtWidgets.QPushButton) and widget.objectName() == 'pushButtonSelectSource' and val == 'text': return True
         if isinstance(widget, QtWidgets.QPushButton) and widget.objectName() == 'pushButtonSelectTarget' and val == 'text': return True
