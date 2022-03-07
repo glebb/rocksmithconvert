@@ -75,7 +75,7 @@ Run tests: `py.test`
 
 ### UI ###
 Qt Creator is used to handle the master .ui and resource files and those should always be up to date (no manual changes to generated python files). 
-To convert "qt" files to python source, use pyuic and pyrcc (e.g. `pyuic5 -x mainwindow.ui -o mainwindow.py`, `pyrcc5 resources.qrc -o resources_rc.py`)
+To convert "qt" files to python source, use pyuic and pyrcc (e.g. `pyuic5 -x mainwindow.ui -o mainwindow.py`)
 
 ### Making convert_gui.py as standalone executable ###
 Running `pyinstaller --name 'RSConvert_GUI' --windowed --onefile src/rocksmithconvert/convert_gui.py --clean --icon=docs/rsconvert.icns ` creates an executable under .dist/.

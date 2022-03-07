@@ -194,4 +194,3 @@ class Ui_MainWindow(object):
         self.pushButtonSelectSource.setText(_translate("MainWindow", "Select auto-process folder"))
 from rocksmithconvert.droparea import DropArea
 from rocksmithconvert.myprogress import MyProgress
-import rocksmithconvert.resources_rc

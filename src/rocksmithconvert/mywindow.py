@@ -5,14 +5,28 @@ from rocksmithconvert.mainwindow import Ui_MainWindow
 from rocksmithconvert.settings import SettingsHandler
 from rocksmithconvert import files_and_folders
 from datetime import datetime
+from pathlib import Path
+import sys
 
+def resource_path():
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = Path( __file__ ).parent.absolute()
+
+    return base_path
+
+
+script_path = resource_path()
 
 class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, *args, obj=None, **kwargs) -> None:
         super(MyWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.setStyleSheet(
-            "#MainWindow{background-image:  url(:/assets/assets/fire.jpg); border : 0px}")
+            f"#MainWindow{{background-image:  url('{script_path}/assets/trees.jpg'); border : 0px}}")
         self.settingsHandler = SettingsHandler(settings = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, "glebb", "rocksmithconvert"))
         self.settingsHandler.loadSettings()
         self.checkBoxAutoProcess.stateChanged.connect(self.saveSettings)

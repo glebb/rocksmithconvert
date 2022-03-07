@@ -361,8 +361,5 @@ p, li { white-space: pre-wrap; }
    <header location="global">rocksmithconvert/myprogress.h</header>
   </customwidget>
  </customwidgets>
- <resources>
-  <include location="rocksmithconvert.resources.qrc"/>
- </resources>
  <connections/>
 </ui>

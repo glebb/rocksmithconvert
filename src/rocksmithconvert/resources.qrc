@@ -1,7 +1,0 @@
-<RCC>
-    <qresource prefix="/assets">
-        <file>assets/snow.jpg</file>
-        <file>assets/fire.jpg</file>
-    </qresource>
-    <qresource prefix="/new/prefix1"/>
-</RCC>
