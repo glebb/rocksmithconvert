@@ -2,13 +2,14 @@ from PyQt5.QtCore import QTimer, QObject, pyqtSignal
 from glob import glob
 from os import path
 
+
 class AutoProcessor(QObject):
     filesAdded = pyqtSignal(list)
     folderNotSet = pyqtSignal()
 
     def __init__(self) -> None:
         super(AutoProcessor, self).__init__()
-        self.autoProcessFolder = ''
+        self.autoProcessFolder = ""
         self.timer = QTimer()
         self.fileList = []
         self.timer.timeout.connect(self.checkFiles)

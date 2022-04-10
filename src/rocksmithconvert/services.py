@@ -20,7 +20,12 @@ class _WorkerSignals(QtCore.QObject):
 
 
 class _WorkerWaiter(QtCore.QThread):
-    def __init__(self, threadSignals: _WorkerSignals, pool: QtCore.QThreadPool, processModel: ProcessModel) -> None:
+    def __init__(
+        self,
+        threadSignals: _WorkerSignals,
+        pool: QtCore.QThreadPool,
+        processModel: ProcessModel,
+    ) -> None:
         super(_WorkerWaiter, self).__init__(pool)
         self.threadPool = pool
         self.signals = threadSignals
@@ -33,7 +38,9 @@ class _WorkerWaiter(QtCore.QThread):
 
 
 class _Worker(QtCore.QRunnable):
-    def __init__(self, threadSignals: _WorkerSignals, file: str, processModel: ProcessModel) -> None:
+    def __init__(
+        self, threadSignals: _WorkerSignals, file: str, processModel: ProcessModel
+    ) -> None:
         super(_Worker, self).__init__()
         self.file = file
         self.processModel = processModel
@@ -52,7 +59,8 @@ class _Worker(QtCore.QRunnable):
                 tryCount += 1
                 if tryCount > 20:
                     self.signals.info.emit(
-                        f"Failed processing {self.file}. File size was 0.")
+                        f"Failed processing {self.file}. File size was 0."
+                    )
             try:
                 name = self.converter.process(self.file, self.processModel)
             except ValueError:
@@ -62,8 +70,13 @@ class _Worker(QtCore.QRunnable):
             except:
                 self.signals.info.emit(f"Failed processing {self.file}.")
                 self.signals.info.emit(f"Unexpected error: {format_exc()}")
-        self.signals.update.emit({'original': self.file, 'processed': name, 'count': str(
-            len(self.processModel.files))})
+        self.signals.update.emit(
+            {
+                "original": self.file,
+                "processed": name,
+                "count": str(len(self.processModel.files)),
+            }
+        )
 
 
 class _Converter:
@@ -72,33 +85,35 @@ class _Converter:
 
     def _convert(self, data: str, mac2pc: bool) -> str:
         if mac2pc:
-            data = data.replace('audio/mac', 'audio/windows')
-            data = data.replace('bin/macos', 'bin/generic')
+            data = data.replace("audio/mac", "audio/windows")
+            data = data.replace("bin/macos", "bin/generic")
         else:
-            data = data.replace('audio/windows', 'audio/mac')
-            data = data.replace('bin/generic', 'bin/macos')
+            data = data.replace("audio/windows", "audio/mac")
+            data = data.replace("bin/generic", "bin/macos")
         return data
 
     def _get_content(self, filename):
         content = None
         try:
-            with open(filename, 'rb') as fh:
+            with open(filename, "rb") as fh:
                 content = PSARC(True).parse_stream(fh)
         except:
-            with open(filename, 'rb') as fh:
+            with open(filename, "rb") as fh:
                 content = PSARC(False).parse_stream(fh)
         return content
 
-    def _do_rename(self, filename: str, output_directory: str, renameScheme: str) -> Optional[str]:
+    def _do_rename(
+        self, filename: str, output_directory: str, renameScheme: str
+    ) -> Optional[str]:
         _, tail = path.split(filename)
         new_name = None
 
         content = self._get_content(filename)
         for fpath, data in content.items():
-            if fpath.endswith('.hsan'):
+            if fpath.endswith(".hsan"):
                 new_name = self._create_new_filename(tail, data, renameScheme)
                 break
-        outname = output_directory + '/' + new_name
+        outname = output_directory + "/" + new_name
         if path.isfile(outname):
             error = f"File exists: {new_name}"
             self.signals.info.emit(error)
@@ -108,15 +123,15 @@ class _Converter:
 
     def _swap_platform(self, filename, targetPlatform):
         temp = filename.lower()
-        if not temp.endswith('_m.psarc') and not temp.endswith('_p.psarc'):
+        if not temp.endswith("_m.psarc") and not temp.endswith("_p.psarc"):
             error = f"Unexpected filename: {filename}"
             self.signals.info.emit(error)
             raise ValueError(error)
         if targetPlatform == "PC":
-            outname = filename.replace('_m.psarc', '_p.psarc')
+            outname = filename.replace("_m.psarc", "_p.psarc")
             mac2pc = True
         elif targetPlatform == "MAC":
-            outname = filename.replace('_p.psarc', '_m.psarc')
+            outname = filename.replace("_p.psarc", "_m.psarc")
             mac2pc = False
         else:
             error = f"Can only convert between MAC and PC filetypes: {filename}"
@@ -124,8 +139,12 @@ class _Converter:
             raise ValueError(error)
         return mac2pc, outname
 
-    def _do_conversion(self, filename: str, processModel: ProcessModel) -> Optional[str]:
-        mac2pc, outputFilename = self._swap_platform(filename, processModel.targetPlatform)
+    def _do_conversion(
+        self, filename: str, processModel: ProcessModel
+    ) -> Optional[str]:
+        mac2pc, outputFilename = self._swap_platform(
+            filename, processModel.targetPlatform
+        )
         content = self._get_content(filename)
 
         _, tail = path.split(outputFilename)
@@ -133,19 +152,25 @@ class _Converter:
 
         new_content = {}
         for filepath, data in content.items():
-            if filepath.endswith('aggregategraph.nt'):
+            if filepath.endswith("aggregategraph.nt"):
                 data = self._convert(data.decode(), mac2pc)
                 if mac2pc:
-                    data = data.replace('macos', 'dx9').encode('utf8')
+                    data = data.replace("macos", "dx9").encode("utf8")
                 else:
-                    data = data.replace('dx9', 'macos').encode('utf8')
+                    data = data.replace("dx9", "macos").encode("utf8")
             new_content[self._convert(filepath, mac2pc)] = data
-            if processModel.appId != 'Disabled' and filepath.endswith('appid'):
-                new_content[filepath] = processModel.appId.encode('utf8')
-            if processModel.renameScheme != 'Disabled' and not new_name and filepath.endswith('.hsan'):
-                new_name = self._create_new_filename(tail, data, processModel.renameScheme)
+            if processModel.appId != "Disabled" and filepath.endswith("appid"):
+                new_content[filepath] = processModel.appId.encode("utf8")
+            if (
+                processModel.renameScheme != "Disabled"
+                and not new_name
+                and filepath.endswith(".hsan")
+            ):
+                new_name = self._create_new_filename(
+                    tail, data, processModel.renameScheme
+                )
 
-        outputFilename = processModel.target + '/'
+        outputFilename = processModel.target + "/"
         if new_name:
             outputFilename += new_name
         else:
@@ -156,8 +181,7 @@ class _Converter:
             self.signals.info.emit(error)
             raise FileExistsError(error)
 
-
-        with open(outputFilename, 'wb') as fh:
+        with open(outputFilename, "wb") as fh:
             PSARC().build_stream(new_content, fh)
         return outputFilename
 
@@ -173,29 +197,33 @@ class _Converter:
         artist = list(self._find_by_key(data_dict, "ArtistName"))[0]
         song = list(self._find_by_key(data_dict, "SongName"))[0]
         dd = False
-        if 'dd_' in original.lower():
+        if "dd_" in original.lower():
             dd = True
         if len(artist) > 10:
-            artist = sub("[^A-Za-z]+", '', artist)
-            if renameScheme == 'Short':
+            artist = sub("[^A-Za-z]+", "", artist)
+            if renameScheme == "Short":
                 artist = artist[:10]
-        max_song_length = 10+(10-len(artist))
-        if renameScheme == 'Short' and len(song) > max_song_length:
-            song = sub("[^A-Za-z]+", '', song)[:max_song_length]
+        max_song_length = 10 + (10 - len(artist))
+        if renameScheme == "Short" and len(song) > max_song_length:
+            song = sub("[^A-Za-z]+", "", song)[:max_song_length]
         if dd:
             song += "DD"
         short_name = f"{artist}-{song}" + original[-8:]
-        keepcharacters = ('.', '_', '-')
-        short_name = unicodedata.normalize('NFKD', short_name).encode('ASCII', 'ignore').decode()
-        return "".join(c for c in short_name if c.isalnum() or c in keepcharacters).rstrip()
+        keepcharacters = (".", "_", "-")
+        short_name = (
+            unicodedata.normalize("NFKD", short_name).encode("ASCII", "ignore").decode()
+        )
+        return "".join(
+            c for c in short_name if c.isalnum() or c in keepcharacters
+        ).rstrip()
 
     def process(self, file: str, processModel: ProcessModel) -> Optional[str]:
         appId = None
-        if processModel.appId != 'Disabled':
+        if processModel.appId != "Disabled":
             appId = processModel.appId
-        if processModel.targetPlatform != 'Disabled':
+        if processModel.targetPlatform != "Disabled":
             return self._do_conversion(file, processModel)
-        elif processModel.renameScheme != 'Disabled':
+        elif processModel.renameScheme != "Disabled":
             return self._do_rename(file, processModel.target, processModel.renameScheme)
 
 
@@ -209,8 +237,7 @@ class ConvertService:
             self.threadSignals.info.emit("No target folder set.")
             self.threadSignals.info.emit("ABORTED")
             return
-        waiterProcess = _WorkerWaiter(
-            self.threadSignals, self.threadpool, processModel)
+        waiterProcess = _WorkerWaiter(self.threadSignals, self.threadpool, processModel)
         self.threadSignals.startProcess.emit()
         for file in processModel.files:
             worker = _Worker(self.threadSignals, file, processModel)

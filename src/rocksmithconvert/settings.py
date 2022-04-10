@@ -1,19 +1,43 @@
 from PyQt5 import QtWidgets, QtCore
 
+
 class SettingsHandler:
     def __init__(self, settings: QtCore.QSettings):
         self.settings = settings
 
-
     def settingsValueIsValid(self, widget: QtWidgets.QWidget, val: str) -> bool:
-        if isinstance(widget, QtWidgets.QCheckBox) and val == 'checked': return True
-        if isinstance(widget, QtWidgets.QLineEdit) and val == 'text': return True
-        if isinstance(widget, QtWidgets.QComboBox) and val == 'currentText': return True
-        if isinstance(widget, QtWidgets.QComboBox) and val == 'currentIndex': return True
-        if isinstance(widget, QtWidgets.QPushButton) and widget.objectName() == 'pushButtonSelectSource' and val == 'toolTip': return True
-        if isinstance(widget, QtWidgets.QPushButton) and widget.objectName() == 'pushButtonSelectSource' and val == 'text': return True
-        if isinstance(widget, QtWidgets.QPushButton) and widget.objectName() == 'pushButtonSelectTarget' and val == 'text': return True
-        if isinstance(widget, QtWidgets.QPushButton) and widget.objectName() == 'pushButtonSelectTarget' and val == 'toolTip': return True
+        if isinstance(widget, QtWidgets.QCheckBox) and val == "checked":
+            return True
+        if isinstance(widget, QtWidgets.QLineEdit) and val == "text":
+            return True
+        if isinstance(widget, QtWidgets.QComboBox) and val == "currentText":
+            return True
+        if isinstance(widget, QtWidgets.QComboBox) and val == "currentIndex":
+            return True
+        if (
+            isinstance(widget, QtWidgets.QPushButton)
+            and widget.objectName() == "pushButtonSelectSource"
+            and val == "toolTip"
+        ):
+            return True
+        if (
+            isinstance(widget, QtWidgets.QPushButton)
+            and widget.objectName() == "pushButtonSelectSource"
+            and val == "text"
+        ):
+            return True
+        if (
+            isinstance(widget, QtWidgets.QPushButton)
+            and widget.objectName() == "pushButtonSelectTarget"
+            and val == "text"
+        ):
+            return True
+        if (
+            isinstance(widget, QtWidgets.QPushButton)
+            and widget.objectName() == "pushButtonSelectTarget"
+            and val == "toolTip"
+        ):
+            return True
         return False
 
     def saveSettings(self) -> None:
@@ -25,9 +49,12 @@ class SettingsHandler:
                     name = prop.name()
                     key = "{}/{}".format(w.objectName(), name)
                     val = w.property(name)
-                    if self.settingsValueIsValid(w, name) and prop.isValid() and prop.isWritable():
+                    if (
+                        self.settingsValueIsValid(w, name)
+                        and prop.isValid()
+                        and prop.isWritable()
+                    ):
                         self.settings.setValue(key, w.property(name))
-
 
     def loadSettings(self) -> None:
         finfo = QtCore.QFileInfo(self.settings.fileName())
@@ -42,7 +69,10 @@ class SettingsHandler:
                         key = "{}/{}".format(w.objectName(), name)
                         if not self.settings.contains(key):
                             continue
-                        val = self.settings.value(key, type=type(last_value),)
+                        val = self.settings.value(
+                            key,
+                            type=type(last_value),
+                        )
                         if (
                             val != last_value
                             and self.settingsValueIsValid(w, name)

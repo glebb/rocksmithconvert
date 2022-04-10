@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QFrame
 import os
 import glob
 
+
 class DropArea(QFrame):
     filesDropped = pyqtSignal(list)
 
@@ -23,7 +24,7 @@ class DropArea(QFrame):
             for url in mimeData.urls():
                 localFile = url.toLocalFile()
                 if os.path.isdir(localFile):
-                    files.extend(glob.iglob(localFile + '**/*.psarc', recursive=True))
+                    files.extend(glob.iglob(localFile + "**/*.psarc", recursive=True))
                 else:
                     files.append(localFile)
             self.filesDropped.emit(files)
@@ -31,4 +32,3 @@ class DropArea(QFrame):
 
     def dragLeaveEvent(self, event: QEvent):
         event.accept()
-        

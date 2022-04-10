@@ -8,33 +8,45 @@ from datetime import datetime
 from pathlib import Path
 import sys
 
+
 def resource_path():
-    """ Get absolute path to resource, works for dev and for PyInstaller """
+    """Get absolute path to resource, works for dev and for PyInstaller"""
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
     except Exception:
-        base_path = Path( __file__ ).parent.absolute()
+        base_path = Path(__file__).parent.absolute()
 
     return base_path
 
 
 script_path = resource_path()
 
+
 class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, *args, obj=None, **kwargs) -> None:
         super(MyWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.setStyleSheet(
-            f"#MainWindow{{background-image:  url('{script_path}/assets/trees.jpg'); border : 0px}}")
-        self.settingsHandler = SettingsHandler(settings = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, "glebb", "rocksmithconvert"))
+            f"#MainWindow{{background-image:  url('{script_path}/assets/trees.jpg'); border : 0px}}"
+        )
+        self.settingsHandler = SettingsHandler(
+            settings=QtCore.QSettings(
+                QtCore.QSettings.IniFormat,
+                QtCore.QSettings.UserScope,
+                "glebb",
+                "rocksmithconvert",
+            )
+        )
         self.settingsHandler.loadSettings()
         self.checkBoxAutoProcess.stateChanged.connect(self.saveSettings)
         self.comboBoxPlatform.currentTextChanged.connect(self.saveSettings)
         if not self.pushButtonSelectTarget.toolTip():
             defaultFolder = files_and_folders.tryGetDefaultRocksmithPath()
             if defaultFolder:
-                self.pushButtonSelectTarget.setText(files_and_folders.shortenFolder(defaultFolder))
+                self.pushButtonSelectTarget.setText(
+                    files_and_folders.shortenFolder(defaultFolder)
+                )
                 self.pushButtonSelectTarget.setToolTip(defaultFolder)
         self.forceShowWindow()
         if self.comboBoxAppId.currentIndex() == 0:
@@ -45,16 +57,13 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if self.comboBoxPlatform.currentIndex() == 0:
             self.comboBoxAppId.setCurrentIndex(0)
 
-
     def timestamp(self) -> str:
         return datetime.now().strftime("%m/%d/%y %H:%M:%S")
 
     def forceShowWindow(self):
-        self.setWindowFlags(self.windowFlags() &
-                            QtCore.Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(self.windowFlags() & QtCore.Qt.WindowStaysOnTopHint)
         self.show()
-        self.setWindowFlags(self.windowFlags() & ~
-                            QtCore.Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowStaysOnTopHint)
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         self.settingsHandler.saveSettings()
@@ -63,30 +72,34 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def openSelectTargetDialog(self, target: str = "") -> None:
         options = QtWidgets.QFileDialog.Options()
         directory = QtWidgets.QFileDialog.getExistingDirectory(
-            self, "Select target folder", target, options=options)
+            self, "Select target folder", target, options=options
+        )
         if directory:
-            self.pushButtonSelectTarget.setText(files_and_folders.shortenFolder(directory))
+            self.pushButtonSelectTarget.setText(
+                files_and_folders.shortenFolder(directory)
+            )
             self.pushButtonSelectTarget.setToolTip(directory)
             self.settingsHandler.saveSettings()
 
     def openSelectSourceDialog(self, source: str = "") -> None:
         options = QtWidgets.QFileDialog.Options()
         directory = QtWidgets.QFileDialog.getExistingDirectory(
-            self, "Select source folder", source, options=options)
+            self, "Select source folder", source, options=options
+        )
         if directory:
-            self.pushButtonSelectSource.setText(files_and_folders.shortenFolder(directory))
+            self.pushButtonSelectSource.setText(
+                files_and_folders.shortenFolder(directory)
+            )
             self.pushButtonSelectSource.setToolTip(directory)
             self.settingsHandler.saveSettings()
         elif not directory and not self.pushButtonSelectSource.toolTip():
             self.checkBoxAutoProcess.setCheckState(0)
 
-
     def disableAutoProcessor(self):
         self.checkBoxAutoProcess.setCheckState(0)
-        self.pushButtonSelectSource.setText('Select auto-process folder')
-        self.pushButtonSelectSource.setToolTip('')
+        self.pushButtonSelectSource.setText("Select auto-process folder")
+        self.pushButtonSelectSource.setToolTip("")
         self.settingsHandler.saveSettings()
-
 
     def allowUserInteraction(self, mode: bool) -> None:
         self.frameDropArea.setAcceptDrops(mode)
@@ -97,31 +110,35 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def setFileList(self, files: List[str]):
         self.plainTextEdit.appendHtml(
-            f"<strong>Source files {self.timestamp()}:</strong>")
+            f"<strong>Source files {self.timestamp()}:</strong>"
+        )
         names = [path.split(filename)[1] for filename in files]
         for name in names:
             self.plainTextEdit.appendHtml(f"{name}")
-        self.progressBar.count = 0        
+        self.progressBar.count = 0
         self.plainTextEdit.ensureCursorVisible()
 
     @QtCore.pyqtSlot(str)
     def writeInfo(self, info) -> None:
-        self.plainTextEdit.appendHtml(
-            f"<span style='color: red'>{info}</span>")
+        self.plainTextEdit.appendHtml(f"<span style='color: red'>{info}</span>")
         self.plainTextEdit.ensureCursorVisible()
 
     @QtCore.pyqtSlot()
     def process(self) -> None:
         self.allowUserInteraction(False)
-        self.plainTextEdit.appendHtml(f'<br><strong>Process log {self.timestamp()}:</strong>')
+        self.plainTextEdit.appendHtml(
+            f"<br><strong>Process log {self.timestamp()}:</strong>"
+        )
         self.progressBar.setValue(0)
 
     @QtCore.pyqtSlot(dict)
     def updateProgress(self, file: Dict[str, str]) -> None:
         self.progressBar.count += 1
-        self.progressBar.setValue(round(self.progressBar.count/int(file['count']) * 100))
-        if file['processed']:
-            _, tail = path.split(file['processed'])
+        self.progressBar.setValue(
+            round(self.progressBar.count / int(file["count"]) * 100)
+        )
+        if file["processed"]:
+            _, tail = path.split(file["processed"])
             self.plainTextEdit.appendHtml(f"OK: {tail}")
         self.plainTextEdit.ensureCursorVisible()
 
@@ -142,7 +159,9 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.pyqtSlot(int)
     def finishedProcessing(self, count) -> None:
         self.progressBar.setValue(100)
-        self.plainTextEdit.appendHtml(f"<strong>Finished processing {count} files</strong><br>")
+        self.plainTextEdit.appendHtml(
+            f"<strong>Finished processing {count} files</strong><br>"
+        )
         self.plainTextEdit.ensureCursorVisible()
         self.allowUserInteraction(True)
 
@@ -152,7 +171,6 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.comboBoxAppId.setEditable(False)
         else:
             self.comboBoxAppId.setEditable(True)
-            
 
     @QtCore.pyqtSlot(str)
     def appIdTextChange(self, newText) -> None:

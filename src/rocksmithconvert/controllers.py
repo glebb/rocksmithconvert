@@ -21,30 +21,31 @@ class MainWindowController(QObject):
 
     def setupMainWindowSignals(self):
         self.window.checkBoxAutoProcess.stateChanged.connect(
-            self.autoProcessStateChanged)
+            self.autoProcessStateChanged
+        )
         self.window.checkBoxAutoProcess.stateChanged.connect(self.window.saveSettings)
         self.window.frameDropArea.filesDropped.connect(self.processFiles)
         self.window.pushButtonSelectTarget.clicked.connect(self.selectTargetFolder)
-        self.window.pushButtonSelectSource.clicked.connect(
-            self.openSelectSourceDialog)
+        self.window.pushButtonSelectSource.clicked.connect(self.openSelectSourceDialog)
         self.window.pushButtonSelectTarget.clicked.connect(self.window.saveSettings)
-        self.window.pushButtonSelectSource.clicked.connect(
-            self.window.saveSettings)
+        self.window.pushButtonSelectSource.clicked.connect(self.window.saveSettings)
         self.window.comboBoxAppId.currentIndexChanged.connect(self.window.appIdChange)
-        self.window.comboBoxAppId.currentTextChanged.connect(self.window.appIdTextChange)
-        self.window.comboBoxPlatform.currentIndexChanged.connect(self.window.convertPlatformChanged)
-
+        self.window.comboBoxAppId.currentTextChanged.connect(
+            self.window.appIdTextChange
+        )
+        self.window.comboBoxPlatform.currentIndexChanged.connect(
+            self.window.convertPlatformChanged
+        )
 
     def setupServiceSignals(self):
         self.convertService.threadSignals.finished.connect(
-            self.window.finishedProcessing)
+            self.window.finishedProcessing
+        )
 
         self.convertService.threadSignals.startProcess.connect(self.window.process)
         self.convertService.threadSignals.startProcess.connect(self.window.saveSettings)
-        self.convertService.threadSignals.update.connect(
-            self.window.updateProgress)
-        self.convertService.threadSignals.info.connect(
-            self.window.writeInfo)
+        self.convertService.threadSignals.update.connect(self.window.updateProgress)
+        self.convertService.threadSignals.info.connect(self.window.writeInfo)
         self.ap.folderNotSet.connect(self.openSelectSourceDialog)
         self.ap.filesAdded.connect(self.processFiles)
 
@@ -57,17 +58,22 @@ class MainWindowController(QObject):
 
     @pyqtSlot()
     def selectTargetFolder(self) -> None:
-        defDir = self.window.pushButtonSelectTarget.toolTip() if path.isdir(
-            self.window.pushButtonSelectTarget.toolTip()) else None
+        defDir = (
+            self.window.pushButtonSelectTarget.toolTip()
+            if path.isdir(self.window.pushButtonSelectTarget.toolTip())
+            else None
+        )
         self.window.openSelectTargetDialog(defDir)
 
     @pyqtSlot()
     def openSelectSourceDialog(self) -> None:
-        defDir = self.window.pushButtonSelectSource.toolTip() if path.isdir(
-            self.window.pushButtonSelectSource.toolTip()) else None
+        defDir = (
+            self.window.pushButtonSelectSource.toolTip()
+            if path.isdir(self.window.pushButtonSelectSource.toolTip())
+            else None
+        )
         self.window.openSelectSourceDialog(defDir)
         self.autoProcessStateChanged(self.window.checkBoxAutoProcess.isChecked())
-
 
     @pyqtSlot(list)
     def processFiles(self, files: List[str]) -> None:
@@ -80,7 +86,7 @@ class MainWindowController(QObject):
             self.window.comboBoxPlatform.currentText(),
             self.window.comboBoxRename.currentText(),
             self.window.comboBoxAppId.currentText(),
-            self.window.checkBoxOverwrite.isChecked()
+            self.window.checkBoxOverwrite.isChecked(),
         )
         self.window.setFileList(filesList)
         self.convertService.process(model)
