@@ -78,7 +78,7 @@ Qt Creator is used to handle the master .ui and resource files and those should 
 To convert "qt" files to python source, use pyuic and pyrcc (e.g. `pyuic5 -x mainwindow.ui -o mainwindow.py`)
 
 ### Making convert_gui.py as standalone executable ###
-Running `pyinstaller --name 'RSConvert_GUI' --windowed --onefile src/rocksmithconvert/convert_gui.py --clean --icon=docs/rsconvert.icns ` creates an executable under .dist/.
+Running `pyinstaller --name 'RSConvert_GUI' --windowed --onefile src/rocksmithconvert/convert_gui.py --clean --icon=docs/rsconvert.icns --add-binary src/rocksmithconvert/assets:assets` creates an executable under .dist/.
 
 ### Misc ###
 env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 3.9.9
