@@ -124,8 +124,8 @@ class _Converter:
             raise ValueError(error)
         return mac2pc, outname
 
-    def _do_conversion(self, filename: str, output_directory: str, targetPlatform: str, renameScheme: str, appId: str) -> Optional[str]:
-        mac2pc, outputFilename = self._swap_platform(filename, targetPlatform)
+    def _do_conversion(self, filename: str, processModel: ProcessModel) -> Optional[str]:
+        mac2pc, outputFilename = self._swap_platform(filename, processModel.targetPlatform)
         content = self._get_content(filename)
 
         _, tail = path.split(outputFilename)
@@ -140,18 +140,18 @@ class _Converter:
                 else:
                     data = data.replace('dx9', 'macos').encode('utf8')
             new_content[self._convert(filepath, mac2pc)] = data
-            if appId and filepath.endswith('appid'):
-                new_content[filepath] = appId.encode('utf8')
-            if renameScheme != 'Disabled' and not new_name and filepath.endswith('.hsan'):
-                new_name = self._create_new_filename(tail, data, renameScheme)
+            if processModel.appId != 'Disabled' and filepath.endswith('appid'):
+                new_content[filepath] = processModel.appId.encode('utf8')
+            if processModel.renameScheme != 'Disabled' and not new_name and filepath.endswith('.hsan'):
+                new_name = self._create_new_filename(tail, data, processModel.renameScheme)
 
-        outputFilename = output_directory + '/'
+        outputFilename = processModel.target + '/'
         if new_name:
             outputFilename += new_name
         else:
             new_name = filename
             outputFilename += tail
-        if path.isfile(outputFilename):
+        if not processModel.overwrite and path.isfile(outputFilename):
             error = f"File exists: {new_name}"
             self.signals.info.emit(error)
             raise FileExistsError(error)
@@ -194,7 +194,7 @@ class _Converter:
         if processModel.appId != 'Disabled':
             appId = processModel.appId
         if processModel.targetPlatform != 'Disabled':
-            return self._do_conversion(file, processModel.target, processModel.targetPlatform, processModel.renameScheme, appId)
+            return self._do_conversion(file, processModel)
         elif processModel.renameScheme != 'Disabled':
             return self._do_rename(file, processModel.target, processModel.renameScheme)
 

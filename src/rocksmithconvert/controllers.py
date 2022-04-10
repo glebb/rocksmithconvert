@@ -79,7 +79,8 @@ class MainWindowController(QObject):
             self.window.pushButtonSelectTarget.toolTip(),
             self.window.comboBoxPlatform.currentText(),
             self.window.comboBoxRename.currentText(),
-            self.window.comboBoxAppId.currentText()
+            self.window.comboBoxAppId.currentText(),
+            self.window.checkBoxOverwrite.isChecked()
         )
         self.window.setFileList(filesList)
         self.convertService.process(model)

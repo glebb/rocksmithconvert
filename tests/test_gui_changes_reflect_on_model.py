@@ -59,3 +59,13 @@ def test_autoprocess_works(widget: rocksmithconvert.controllers.MainWindowContro
 	widget.window.checkBoxAutoProcess.setCheckState(1)
 	widget.ap.checkFiles.assert_called_once()
 
+def test_overwrite(widget: rocksmithconvert.controllers.MainWindowController, qtbot):
+	widget.window.comboBoxPlatform.setCurrentIndex(1)
+	widget.window.checkBoxOverwrite.setCheckState(1)
+	widget.processFiles(["test_p.psarc"])
+	model: ProcessModel = widget.convertService.process.call_args.args[0]
+	assert model.overwrite == True
+	widget.window.checkBoxOverwrite.setCheckState(0)
+	widget.processFiles(["test_p.psarc"])
+	model: ProcessModel = widget.convertService.process.call_args.args[0]
+	assert model.overwrite == False

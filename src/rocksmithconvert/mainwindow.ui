@@ -179,39 +179,6 @@ p, li { white-space: pre-wrap; }
             <string notr="true"/>
            </property>
            <layout class="QGridLayout" name="gridLayout">
-            <item row="12" column="0" colspan="2">
-             <widget class="QPushButton" name="pushButtonSelectTarget">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="autoFillBackground">
-               <bool>false</bool>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">border-color: rgb(0, 0, 0);</string>
-              </property>
-              <property name="text">
-               <string>Select target folder</string>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="0">
-             <widget class="QLabel" name="label_3">
-              <property name="text">
-               <string>Change AppID:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="0">
-             <widget class="QLabel" name="label_2">
-              <property name="text">
-               <string>Rename:</string>
-              </property>
-             </widget>
-            </item>
             <item row="0" column="0">
              <widget class="QLabel" name="label">
               <property name="text">
@@ -219,7 +186,41 @@ p, li { white-space: pre-wrap; }
               </property>
              </widget>
             </item>
-            <item row="4" column="1">
+            <item row="5" column="0">
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>Rename scheme:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QLabel" name="label_3">
+              <property name="text">
+               <string>Change AppID:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="QComboBox" name="comboBoxAppId">
+              <property name="editable">
+               <bool>true</bool>
+              </property>
+              <property name="currentIndex">
+               <number>1</number>
+              </property>
+              <item>
+               <property name="text">
+                <string>Disabled</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>248750</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="5" column="1">
              <widget class="QComboBox" name="comboBoxRename">
               <property name="autoFillBackground">
                <bool>true</bool>
@@ -242,6 +243,25 @@ p, li { white-space: pre-wrap; }
                 <string>Full</string>
                </property>
               </item>
+             </widget>
+            </item>
+            <item row="13" column="0" colspan="2">
+             <widget class="QPushButton" name="pushButtonSelectTarget">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="autoFillBackground">
+               <bool>false</bool>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">border-color: rgb(0, 0, 0);</string>
+              </property>
+              <property name="text">
+               <string>Select target folder</string>
+              </property>
              </widget>
             </item>
             <item row="0" column="1">
@@ -275,31 +295,18 @@ p, li { white-space: pre-wrap; }
               </item>
              </widget>
             </item>
-            <item row="11" column="0">
+            <item row="12" column="0">
              <widget class="QLabel" name="labelTarget">
               <property name="text">
                <string>Target:</string>
               </property>
              </widget>
             </item>
-            <item row="5" column="1">
-             <widget class="QComboBox" name="comboBoxAppId">
-              <property name="editable">
-               <bool>true</bool>
+            <item row="2" column="0">
+             <widget class="QCheckBox" name="checkBoxOverwrite">
+              <property name="text">
+               <string>Overwrite existing</string>
               </property>
-              <property name="currentIndex">
-               <number>1</number>
-              </property>
-              <item>
-               <property name="text">
-                <string>Disabled</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>248750</string>
-               </property>
-              </item>
              </widget>
             </item>
            </layout>
@@ -361,5 +368,6 @@ p, li { white-space: pre-wrap; }
    <header location="global">rocksmithconvert/myprogress.h</header>
   </customwidget>
  </customwidgets>
+ <resources/>
  <connections/>
 </ui>
