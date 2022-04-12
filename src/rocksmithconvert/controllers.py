@@ -12,7 +12,7 @@ class MainWindowController(QObject):
     def __init__(self, files: List[str]):
         super(MainWindowController, self).__init__()
         self.window = MyWindow()
-        self.window.setWindowTitle(self.window.windowTitle() + " 2.2")
+        self.window.setWindowTitle(self.window.windowTitle() + " 2.3")
         self.convertService = ConvertService()
         self.ap = AutoProcessor()
         self.setupMainWindowSignals()
