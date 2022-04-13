@@ -5,7 +5,7 @@ from rocksmithconvert.files_and_folders import filterAndSortPsarcFiles
 from rocksmithconvert.models import ProcessModel
 from rocksmithconvert.services import ConvertService
 from rocksmithconvert.mywindow import MyWindow
-from PyQt5.QtCore import pyqtSlot, QObject
+from PyQt6.QtCore import pyqtSlot, QObject
 
 
 class MainWindowController(QObject):

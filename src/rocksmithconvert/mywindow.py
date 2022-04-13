@@ -1,6 +1,6 @@
 from os import path
 from typing import Dict, List
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt6 import QtWidgets, QtCore, QtGui
 from rocksmithconvert.mainwindow import Ui_MainWindow
 from rocksmithconvert.settings import SettingsHandler
 from rocksmithconvert import files_and_folders
@@ -27,13 +27,13 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, *args, obj=None, **kwargs) -> None:
         super(MyWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
-        self.setStyleSheet(
-            f"#MainWindow{{background-image:  url('{script_path}/assets/trees.jpg'); border : 0px}}"
+        self.setStyleSheet(f"#centralwidget {{ background-image:url('{script_path}/assets/trees.jpg'); border: 0px; background-color: pink; }}"
         )
         self.settingsHandler = SettingsHandler(
+            
             settings=QtCore.QSettings(
-                QtCore.QSettings.IniFormat,
-                QtCore.QSettings.UserScope,
+                QtCore.QSettings.Format.IniFormat,
+                QtCore.QSettings.Scope.UserScope,
                 "glebb",
                 "rocksmithconvert",
             )
@@ -61,9 +61,9 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         return datetime.now().strftime("%m/%d/%y %H:%M:%S")
 
     def forceShowWindow(self):
-        self.setWindowFlags(self.windowFlags() & QtCore.Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(self.windowFlags() & QtCore.Qt.WindowType.WindowStaysOnTopHint)
         self.show()
-        self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowType.WindowStaysOnTopHint)
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         self.settingsHandler.saveSettings()

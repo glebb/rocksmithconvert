@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, QtCore
+from PyQt6 import QtWidgets, QtCore
 
 
 class SettingsHandler:
@@ -41,7 +41,7 @@ class SettingsHandler:
         return False
 
     def saveSettings(self) -> None:
-        for w in QtWidgets.qApp.allWidgets():
+        for w in QtWidgets.QApplication.allWidgets():
             if w.objectName():
                 mo = w.metaObject()
                 for i in range(mo.propertyCount()):
@@ -59,7 +59,7 @@ class SettingsHandler:
     def loadSettings(self) -> None:
         finfo = QtCore.QFileInfo(self.settings.fileName())
         if finfo.exists() and finfo.isFile():
-            for w in QtWidgets.qApp.allWidgets():
+            for w in QtWidgets.QApplication.allWidgets():
                 if w.objectName():
                     mo = w.metaObject()
                     for i in range(mo.propertyCount()):

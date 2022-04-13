@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QTimer, QObject, pyqtSignal
+from PyQt6.QtCore import QTimer, QObject, pyqtSignal
 from glob import glob
 from os import path
 

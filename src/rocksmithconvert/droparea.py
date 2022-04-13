@@ -1,5 +1,5 @@
-from PyQt5.QtCore import QEvent, pyqtSignal
-from PyQt5.QtWidgets import QFrame
+from PyQt6.QtCore import QEvent, pyqtSignal
+from PyQt6.QtWidgets import QFrame
 import os
 import glob
 
