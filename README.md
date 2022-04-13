@@ -5,7 +5,7 @@ Based on 0x0L's pyrocksmith (https://github.com/0x0L/rocksmith)
 
 ![Screenshot](docs/screenshot.png)
 ## Download & install ##
-Download latest readymade package for OSX 10.12 and newer: https://github.com/glebb/rocksmithconvert/releases
+Download latest readymade package for OSX 10.13 and newer: https://github.com/glebb/rocksmithconvert/releases
 
 * Download the zip package
 * Unzip by double clicking the file (if needed, e.g. Safari does this automatically)
@@ -61,10 +61,9 @@ bundle everything to a nice and clean standalone osx app without additional
 dependencies. Batteries included. This is achieved
 by using pyinstaller to create a single executable from PyQt app.
 ### Requirements ###
-* Qt 5
 * Python 3.6+:
    * `pip install -r requirements.txt`:
-      * PyQt5 (latest version which works in osx 10.12 is 5.13.2)
+      * PyQt6
       * pyinstaller (https://pypi.org/project/pyinstaller/)
       * git+https://github.com/0x0L/rocksmith.git
 
@@ -75,7 +74,7 @@ Run tests: `py.test`
 
 ### UI ###
 Qt Creator is used to handle the master .ui and resource files and those should always be up to date (no manual changes to generated python files). 
-To convert "qt" files to python source, use pyuic and pyrcc (e.g. `pyuic5 -x mainwindow.ui -o mainwindow.py`)
+To convert "qt" files to python source, use pyuic (and pyrcc for resources) (e.g. `pyuic6 -x mainwindow.ui -o mainwindow.py`)
 
 ### Making convert_gui.py as standalone executable ###
 Running `pyinstaller --name 'RSConvert_GUI' --windowed --onefile src/rocksmithconvert/convert_gui.py --clean --icon=docs/rsconvert.icns --add-binary src/rocksmithconvert/assets:assets` creates an executable under .dist/.
