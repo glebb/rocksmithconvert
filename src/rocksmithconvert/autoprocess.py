@@ -1,16 +1,16 @@
-from PyQt5.QtCore import QTimer, QObject, pyqtSignal
+from rocksmithconvert.qt_wrapper import QtCore
 from glob import glob
 from os import path
 
 
-class AutoProcessor(QObject):
-    filesAdded = pyqtSignal(list)
-    folderNotSet = pyqtSignal()
+class AutoProcessor(QtCore.QObject):
+    filesAdded = QtCore.pyqtSignal(list)
+    folderNotSet = QtCore.pyqtSignal()
 
     def __init__(self) -> None:
         super(AutoProcessor, self).__init__()
         self.autoProcessFolder = ""
-        self.timer = QTimer()
+        self.timer = QtCore.QTimer()
         self.fileList = []
         self.timer.timeout.connect(self.checkFiles)
 

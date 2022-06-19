@@ -3,7 +3,7 @@ from json import loads
 from re import sub
 from traceback import format_exc
 from typing import Optional
-from PyQt5 import QtCore
+from rocksmithconvert.qt_wrapper import QtCore
 from shutil import copyfile
 from rocksmith.psarc import PSARC
 from rocksmithconvert.models import ProcessModel

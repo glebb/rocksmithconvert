@@ -1,12 +1,13 @@
-from os import path
-from typing import Dict, List
-from PyQt5 import QtWidgets, QtCore, QtGui
-from rocksmithconvert.mainwindow import Ui_MainWindow
-from rocksmithconvert.settings import SettingsHandler
-from rocksmithconvert import files_and_folders
-from datetime import datetime
-from pathlib import Path
 import sys
+from datetime import datetime
+from os import path
+from pathlib import Path
+from typing import Dict, List
+
+from rocksmithconvert import files_and_folders
+from rocksmithconvert.mainwindow import Ui_MainWindow
+from rocksmithconvert.qt_wrapper import QtCore, QtGui, QtWidgets
+from rocksmithconvert.settings import SettingsHandler
 
 
 def resource_path():
@@ -28,12 +29,18 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         super(MyWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.setStyleSheet(
-            f"#MainWindow{{background-image:  url('{script_path}/assets/trees.jpg'); border : 0px}}"
+            f"#frameDropArea{{background-image:  url('{script_path}/assets/trees.jpg'); border : 0px}}"
         )
+        try:
+            format = QtCore.QSettings.IniFormat
+            scope = QtCore.QSettings.UserScope
+        except:
+            format = QtCore.QSettings.Format.IniFormat
+            scope = QtCore.QSettings.Scope.UserScope
         self.settingsHandler = SettingsHandler(
             settings=QtCore.QSettings(
-                QtCore.QSettings.IniFormat,
-                QtCore.QSettings.UserScope,
+                format,
+                scope,
                 "glebb",
                 "rocksmithconvert",
             )
@@ -61,18 +68,15 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         return datetime.now().strftime("%m/%d/%y %H:%M:%S")
 
     def forceShowWindow(self):
-        self.setWindowFlags(self.windowFlags() & QtCore.Qt.WindowStaysOnTopHint)
         self.show()
-        self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowStaysOnTopHint)
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         self.settingsHandler.saveSettings()
         QtWidgets.QMainWindow.closeEvent(self, event)
 
     def openSelectTargetDialog(self, target: str = "") -> None:
-        options = QtWidgets.QFileDialog.Options()
         directory = QtWidgets.QFileDialog.getExistingDirectory(
-            self, "Select target folder", target, options=options
+            self, "Select target folder", target
         )
         if directory:
             self.pushButtonSelectTarget.setText(
@@ -82,9 +86,8 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.settingsHandler.saveSettings()
 
     def openSelectSourceDialog(self, source: str = "") -> None:
-        options = QtWidgets.QFileDialog.Options()
         directory = QtWidgets.QFileDialog.getExistingDirectory(
-            self, "Select source folder", source, options=options
+            self, "Select source folder", source
         )
         if directory:
             self.pushButtonSelectSource.setText(

@@ -5,10 +5,10 @@ from rocksmithconvert.files_and_folders import filterAndSortPsarcFiles
 from rocksmithconvert.models import ProcessModel
 from rocksmithconvert.services import ConvertService
 from rocksmithconvert.mywindow import MyWindow
-from PyQt5.QtCore import pyqtSlot, QObject
+from rocksmithconvert.qt_wrapper import QtCore
 
 
-class MainWindowController(QObject):
+class MainWindowController(QtCore.QObject):
     def __init__(self, files: List[str]):
         super(MainWindowController, self).__init__()
         self.window = MyWindow()
@@ -56,7 +56,7 @@ class MainWindowController(QObject):
             self.ap.autoProcessFolder = self.window.pushButtonSelectSource.toolTip()
             self.ap.start()
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def selectTargetFolder(self) -> None:
         defDir = (
             self.window.pushButtonSelectTarget.toolTip()
@@ -65,7 +65,7 @@ class MainWindowController(QObject):
         )
         self.window.openSelectTargetDialog(defDir)
 
-    @pyqtSlot()
+    @QtCore.pyqtSlot()
     def openSelectSourceDialog(self) -> None:
         defDir = (
             self.window.pushButtonSelectSource.toolTip()
@@ -75,7 +75,7 @@ class MainWindowController(QObject):
         self.window.openSelectSourceDialog(defDir)
         self.autoProcessStateChanged(self.window.checkBoxAutoProcess.isChecked())
 
-    @pyqtSlot(list)
+    @QtCore.pyqtSlot(list)
     def processFiles(self, files: List[str]) -> None:
         filesList = filterAndSortPsarcFiles(files)
         if len(filesList) == 0:
@@ -91,7 +91,7 @@ class MainWindowController(QObject):
         self.window.setFileList(filesList)
         self.convertService.process(model)
 
-    @pyqtSlot(int)
+    @QtCore.pyqtSlot(int)
     def autoProcessStateChanged(self, state: int) -> None:
         if bool(state):
             if path.isdir(self.window.pushButtonSelectSource.toolTip()):

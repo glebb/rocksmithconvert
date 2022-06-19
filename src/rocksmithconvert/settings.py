@@ -1,8 +1,13 @@
-from PyQt5 import QtWidgets, QtCore
+from rocksmithconvert.qt_wrapper import QtWidgets, QtCore
 
 
 class SettingsHandler:
     def __init__(self, settings: QtCore.QSettings):
+        try:
+            self.app = QtWidgets.qApp
+        except:
+            self.app = QtWidgets.QApplication
+        
         self.settings = settings
 
     def settingsValueIsValid(self, widget: QtWidgets.QWidget, val: str) -> bool:
@@ -41,7 +46,7 @@ class SettingsHandler:
         return False
 
     def saveSettings(self) -> None:
-        for w in QtWidgets.qApp.allWidgets():
+        for w in self.app.allWidgets():
             if w.objectName():
                 mo = w.metaObject()
                 for i in range(mo.propertyCount()):
@@ -59,7 +64,7 @@ class SettingsHandler:
     def loadSettings(self) -> None:
         finfo = QtCore.QFileInfo(self.settings.fileName())
         if finfo.exists() and finfo.isFile():
-            for w in QtWidgets.qApp.allWidgets():
+            for w in self.app.allWidgets():
                 if w.objectName():
                     mo = w.metaObject()
                     for i in range(mo.propertyCount()):

@@ -1,23 +1,22 @@
-from PyQt5.QtCore import QEvent, pyqtSignal
-from PyQt5.QtWidgets import QFrame
+from rocksmithconvert.qt_wrapper import QtCore, QtWidgets
 import os
 import glob
 
 
-class DropArea(QFrame):
-    filesDropped = pyqtSignal(list)
+class DropArea(QtWidgets.QFrame):
+    filesDropped = QtCore.pyqtSignal(list)
 
-    def __init__(self, parent: QFrame = None) -> None:
+    def __init__(self, parent: QtWidgets.QFrame = None) -> None:
         super(DropArea, self).__init__(parent)
         self.setAcceptDrops(True)
 
-    def dragEnterEvent(self, event: QEvent):
+    def dragEnterEvent(self, event: QtCore.QEvent):
         event.acceptProposedAction()
 
-    def dragMoveEvent(self, event: QEvent):
+    def dragMoveEvent(self, event: QtCore.QEvent):
         event.acceptProposedAction()
 
-    def dropEvent(self, event: QEvent):
+    def dropEvent(self, event: QtCore.QEvent):
         mimeData = event.mimeData()
         if mimeData.hasUrls():
             files = []
@@ -30,5 +29,5 @@ class DropArea(QFrame):
             self.filesDropped.emit(files)
             event.acceptProposedAction()
 
-    def dragLeaveEvent(self, event: QEvent):
+    def dragLeaveEvent(self, event: QtCore.QEvent):
         event.accept()
