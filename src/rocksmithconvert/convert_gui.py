@@ -17,7 +17,7 @@ def parseFilesFromArguments():
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     app.setStyleSheet(
-        f"#centralwidget {{background-image:  url('{utils.assets_path()}trees.jpg'); border : 0px}}"
+        f"#centralwidget {{background-image:  url('{utils.assets_path()}wood.jpg'); border : 0px}}"
     )
  
     controller = MainWindowController(parseFilesFromArguments())
