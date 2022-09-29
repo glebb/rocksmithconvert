@@ -1,36 +1,18 @@
-import sys
 from datetime import datetime
 from os import path
-from pathlib import Path
 from typing import Dict, List
 
-from rocksmithconvert import files_and_folders
+from rocksmithconvert import files_and_folders, utils
 from rocksmithconvert.mainwindow import Ui_MainWindow
 from rocksmithconvert.qt_wrapper import QtCore, QtGui, QtWidgets
 from rocksmithconvert.settings import SettingsHandler
 
 
-def resource_path():
-    """Get absolute path to resource, works for dev and for PyInstaller"""
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = Path(__file__).parent.absolute()
-
-    return base_path
-
-
-script_path = resource_path()
-
-
 class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, *args, obj=None, **kwargs) -> None:
         super(MyWindow, self).__init__(*args, **kwargs)
+        self.setWindowIcon(QtGui.QIcon(f"{utils.assets_path()}rsconvert.png"))
         self.setupUi(self)
-        self.setStyleSheet(
-            f"#frameDropArea{{background-image:  url('{script_path}/assets/trees.jpg'); border : 0px}}"
-        )
         try:
             format = QtCore.QSettings.IniFormat
             scope = QtCore.QSettings.UserScope

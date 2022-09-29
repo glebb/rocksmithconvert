@@ -22,7 +22,6 @@ class Ui_MainWindow(object):
         MainWindow.setMaximumSize(QtCore.QSize(800, 600))
         MainWindow.setBaseSize(QtCore.QSize(640, 480))
         MainWindow.setAutoFillBackground(True)
-        MainWindow.setStyleSheet("")
         MainWindow.setUnifiedTitleAndToolBarOnMac(True)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setAutoFillBackground(False)
