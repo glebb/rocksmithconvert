@@ -50,36 +50,36 @@ user interface was build on platypus and applescript. Most of it was implemented
 It did (still does) its job, but considering the limitations, it was not feasible to develop it much further as
 adding new features became increasingly awkward.
 
-2.x Is the current branch, based on PyQt5. It still uses pyrocksmith as it's core for the psarc file handling,
+2.x Is the current branch, based on PyQt5/PyQt6. It still uses pyrocksmith as it's core for the psarc file handling,
 but otherwise it's a complete rewrite. New features include e.g. permanent settings and using threads for
-processing, making it much faster. In theory, it should also work cross platform (it hasn't been developed or tested
-with Windows though!)
+processing, making it much faster. In theory, it should also work cross platform.
 
 ## Development & building from source ##
 The basic idea is to use pyrocksmith to parse the files and
 bundle everything to a nice and clean standalone osx app without additional
-dependencies. Batteries included. This is achieved
+dependencies. That's why the release filesize is so BIG! Batteries included. This is achieved
 by using pyinstaller to create a single executable from PyQt app.
+
 ### Requirements ###
-* Qt 5
 * Python 3.6+:
    * `pip install -r requirements.txt`:
-      * PyQt5 (latest version which works in osx 10.12 is 5.13.2)
+      * PyQt5 (latest version which works in osx 10.12 is 5.13.2), or PyQt6 if building on modern mac (requirements-m1.txt)
       * pyinstaller (https://pypi.org/project/pyinstaller/)
       * git+https://github.com/0x0L/rocksmith.git
 
-### Testing ###
+### Testing and running locally ###
 Install dependencies: `pip install -r requirements-dev.txt`
 Install as a local package: `pip install -e src/.`
 Run tests: `py.test`
+Run app: `convert_gui.py`
 
 ### UI ###
-Qt Creator is used to handle the master .ui and resource files and those should always be up to date (no manual changes to generated python files). 
+Qt Creator is used to handle the master .ui.
 To convert "qt" files to python source, use pyuic5 or pyuic6 (e.g. `pyuic6 -x mainwindow.ui -o mainwindow.py`)
+To be compatible with both PyQt5 and PyQt6, remember to manually edit mainwindow.py and replace qt imports to
+`from rocksmithconvert.qt_wrapper import QtCore, QtWidgets`
 
 ### Making convert_gui.py as standalone executable ###
 Running `pyinstaller --name 'RSConvert_GUI' --windowed --onefile src/rocksmithconvert/convert_gui.py --clean --icon=docs/rsconvert.icns --add-binary src/rocksmithconvert/assets:assets` creates an executable under .dist/.
-
-### Misc ###
-env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 3.9.9
+On Windows: `pyinstaller --name RSConvert_GUI --windowed --onefile src/rocksmithconvert/convert_gui.py --clean --icon=docs/rsconvert.ico --add-binary src/rocksmithconvert/assets;assets`
 

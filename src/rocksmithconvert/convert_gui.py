@@ -2,7 +2,7 @@ import sys
 from argparse import ArgumentParser
 from os import environ
 
-import utils
+from rocksmithconvert import utils
 from rocksmithconvert.controllers import MainWindowController
 from rocksmithconvert.qt_wrapper import *
 
