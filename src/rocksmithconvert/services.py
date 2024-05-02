@@ -2,7 +2,7 @@ from os import path
 from json import loads
 from re import sub
 from traceback import format_exc
-from typing import Optional
+from typing import Any, Generator, Optional
 from rocksmithconvert.qt_wrapper import QtCore
 from shutil import copyfile
 from rocksmith.psarc import PSARC
@@ -106,7 +106,7 @@ class _Converter:
         self, filename: str, output_directory: str, renameScheme: str
     ) -> Optional[str]:
         _, tail = path.split(filename)
-        new_name = None
+        new_name = ""
 
         content = self._get_content(filename)
         for fpath, data in content.items():
@@ -183,9 +183,12 @@ class _Converter:
 
         with open(outputFilename, "wb") as fh:
             PSARC().build_stream(new_content, fh)
+
+        if processModel.appId != "Disabled":
+            self.signals.info.emit(f"App id set to {processModel.appId} for {path.basename(outputFilename)}")
         return outputFilename
 
-    def _find_by_key(self, data: str, target: str) -> str:
+    def _find_by_key(self, data: dict, target: str) -> Generator[Any, Any, Any]:
         for key, value in data.items():
             if isinstance(value, dict):
                 yield from self._find_by_key(value, target)
@@ -218,13 +221,11 @@ class _Converter:
         ).rstrip()
 
     def process(self, file: str, processModel: ProcessModel) -> Optional[str]:
-        appId = None
-        if processModel.appId != "Disabled":
-            appId = processModel.appId
         if processModel.targetPlatform != "Disabled":
             return self._do_conversion(file, processModel)
         elif processModel.renameScheme != "Disabled":
             return self._do_rename(file, processModel.target, processModel.renameScheme)
+        return None
 
 
 class ConvertService:

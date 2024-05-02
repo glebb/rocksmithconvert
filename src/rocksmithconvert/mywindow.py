@@ -124,7 +124,7 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         )
         if file["processed"]:
             _, tail = path.split(file["processed"])
-            self.plainTextEdit.appendHtml(f"OK: {tail}")
+            self.plainTextEdit.appendHtml(f"Processed OK: {tail}")
         self.plainTextEdit.ensureCursorVisible()
 
     @QtCore.pyqtSlot(int)
