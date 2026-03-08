@@ -144,6 +144,37 @@ The spec now carries that binding choice into the bundled app with a runtime hoo
 
 The spec also enables Python bytecode optimization, bundles only the assets that are currently used by the app UI, and now builds a true collected macOS `.app` bundle instead of packing everything into one large executable. That collected layout is intentionally chosen because packed macOS app bundles tend to launch more slowly under Gatekeeper and PyInstaller bootstrapping.
 
+If you specifically need a onefile-style macOS app bundle, you can still build one directly with PyInstaller. Use that only when the distribution format matters more than launch speed, because the onefile-style macOS `.app` is slower to open than the collected bundle above.
+
+Native Apple Silicon PyQt6 onefile workflow:
+
+```bash
+python -m pip install --upgrade pip setuptools wheel
+pip install -r requirements-dev.txt
+pip install -r requirements-m1.txt
+pip install -e src/.
+pyinstaller \
+	--clean \
+	--windowed \
+	--onefile \
+	--target-arch arm64 \
+	--name RSConvert_GUI \
+	--icon docs/rsconvert.icns \
+	--runtime-hook pyinstaller-hooks/runtime_qt_api_pyqt6.py \
+	--exclude-module PyQt5 \
+	--hidden-import PyQt6 \
+	--hidden-import PyQt6.QtCore \
+	--hidden-import PyQt6.QtGui \
+	--hidden-import PyQt6.QtWidgets \
+	--add-binary 'src/rocksmithconvert/assets/wood.jpg:assets' \
+	--add-binary 'src/rocksmithconvert/assets/rsconvert.png:assets' \
+	src/rocksmithconvert/convert_gui.py
+file dist/RSConvert_GUI.app/Contents/MacOS/RSConvert_GUI
+du -sh dist/RSConvert_GUI.app
+```
+
+The final `file` command should report `arm64`. On macOS, `--windowed --onefile` still produces an `.app` bundle rather than a single loose binary, and startup is expected to be slower than the collected spec-based build.
+
 To profile launch time from inside the app, set `ROCKSMITHCONVERT_STARTUP_TIMING=1` before starting it. The app will print checkpoints such as `QApplication created`, `main window shown`, and `deferred startup complete` to stderr, which makes it easier to separate PyInstaller launch overhead from Python and Qt initialization time.
 
 Examples:

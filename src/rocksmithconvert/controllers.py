@@ -16,7 +16,7 @@ class MainWindowController(QtCore.QObject):
         startup.mark("controller init begin")
         self.window = MyWindow()
         startup.mark("window object created")
-        self.window.setWindowTitle(self.window.windowTitle() + " 2.3")
+        self.window.setWindowTitle(self.window.windowTitle() + " 2.4")
         self.convertService = ConvertService()
         startup.mark("convert service created")
         self.ap = AutoProcessor()
