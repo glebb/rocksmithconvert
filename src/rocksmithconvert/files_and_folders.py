@@ -1,3 +1,4 @@
+from functools import lru_cache
 from os import path
 from sys import platform
 from typing import List
@@ -9,6 +10,7 @@ def shortenFolder(folder: str) -> str:
     return folder
 
 
+@lru_cache(maxsize=1)
 def tryGetDefaultRocksmithPath() -> str:
     if platform == "darwin":
         default = path.join(

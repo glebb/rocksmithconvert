@@ -1,5 +1,6 @@
 from os import path
 from typing import List
+from rocksmithconvert import startup
 from rocksmithconvert.autoprocess import AutoProcessor
 from rocksmithconvert.files_and_folders import filterAndSortPsarcFiles
 from rocksmithconvert.models import ProcessModel
@@ -11,15 +12,24 @@ from rocksmithconvert.qt_wrapper import QtCore
 class MainWindowController(QtCore.QObject):
     def __init__(self, files: List[str]):
         super(MainWindowController, self).__init__()
+        self.pendingFiles = list(files)
+        startup.mark("controller init begin")
         self.window = MyWindow()
+        startup.mark("window object created")
         self.window.setWindowTitle(self.window.windowTitle() + " 2.3")
         self.convertService = ConvertService()
+        startup.mark("convert service created")
         self.ap = AutoProcessor()
+        startup.mark("auto processor created")
         self.setupMainWindowSignals()
         self.setupServiceSignals()
-        self.initProcessing(files)
+        startup.mark("controller signals connected")
+        self.window.show()
+        startup.mark("main window shown")
+        QtCore.QTimer.singleShot(0, self.window.initializeStartupState)
 
     def setupMainWindowSignals(self):
+        self.window.startupInitialized.connect(self.finishStartup)
         self.window.checkBoxAutoProcess.stateChanged.connect(
             self.autoProcessStateChanged
         )
@@ -49,9 +59,11 @@ class MainWindowController(QtCore.QObject):
         self.ap.folderNotSet.connect(self.openSelectSourceDialog)
         self.ap.filesAdded.connect(self.processFiles)
 
-    def initProcessing(self, files):
-        if files:
-            self.processFiles(files)
+    @QtCore.pyqtSlot()
+    def finishStartup(self) -> None:
+        if self.pendingFiles:
+            self.processFiles(self.pendingFiles)
+            self.pendingFiles = []
         if self.window.checkBoxAutoProcess.isChecked():
             self.ap.autoProcessFolder = self.window.pushButtonSelectSource.toolTip()
             self.ap.start()

@@ -140,6 +140,19 @@ ROCKSMITHCONVERT_QT_API=pyqt5 pyinstaller --clean RSConvert_GUI.spec
 ROCKSMITHCONVERT_QT_API=pyqt6 pyinstaller --clean RSConvert_GUI.spec
 ```
 
+The spec now carries that binding choice into the bundled app with a runtime hook, so startup does not spend time probing the other Qt binding at launch. If only one of `PyQt5` or `PyQt6` is installed in the build environment, the spec will also auto-select it.
+
+The spec also enables Python bytecode optimization, bundles only the assets that are currently used by the app UI, and now builds a true collected macOS `.app` bundle instead of packing everything into one large executable. That collected layout is intentionally chosen because packed macOS app bundles tend to launch more slowly under Gatekeeper and PyInstaller bootstrapping.
+
+To profile launch time from inside the app, set `ROCKSMITHCONVERT_STARTUP_TIMING=1` before starting it. The app will print checkpoints such as `QApplication created`, `main window shown`, and `deferred startup complete` to stderr, which makes it easier to separate PyInstaller launch overhead from Python and Qt initialization time.
+
+Examples:
+
+```bash
+ROCKSMITHCONVERT_STARTUP_TIMING=1 python -m rocksmithconvert.convert_gui
+ROCKSMITHCONVERT_STARTUP_TIMING=1 dist/RSConvert_GUI.app/Contents/MacOS/RSConvert_GUI
+```
+
 On Windows:
 
 ```bash
@@ -171,8 +184,9 @@ pip install -r requirements-dev.txt
 pip install -r requirements.txt
 pip install -e src/.
 ROCKSMITHCONVERT_QT_API=pyqt5 python -m rocksmithconvert.convert_gui
-ROCKSMITHCONVERT_QT_API=pyqt5 PYINSTALLER_TARGET_ARCH=x86_64 pyinstaller --clean RSConvert_GUI.spec
+ROCKSMITHCONVERT_STARTUP_TIMING=1 ROCKSMITHCONVERT_QT_API=pyqt5 PYINSTALLER_TARGET_ARCH=x86_64 pyinstaller --clean RSConvert_GUI.spec
 file dist/RSConvert_GUI.app/Contents/MacOS/RSConvert_GUI
+du -sh dist/RSConvert_GUI.app
 ```
 
 PyQt6-oriented workflow for newer macOS targets:
@@ -189,11 +203,14 @@ pip install -e src/.
 ROCKSMITHCONVERT_QT_API=pyqt6 python -m rocksmithconvert.convert_gui
 ROCKSMITHCONVERT_QT_API=pyqt6 PYINSTALLER_TARGET_ARCH=x86_64 pyinstaller --clean RSConvert_GUI.spec
 file dist/RSConvert_GUI.app/Contents/MacOS/RSConvert_GUI
+du -sh dist/RSConvert_GUI.app
 ```
 
 The final `file` command should report `x86_64`. If it reports `arm64`, the virtual environment was created from the wrong interpreter.
 
 For a native Apple Silicon build, run the same command without Rosetta and set `PYINSTALLER_TARGET_ARCH=arm64` if you want the target to be explicit.
+
+If you want to compare package size across build variants, use `du -sh dist/RSConvert_GUI.app` after each build. For older macOS compatibility, compare PyQt5 builds first because the PyQt5 path is currently the recommended compatibility release path.
 
 ## Project layout
 

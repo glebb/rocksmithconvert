@@ -1,4 +1,9 @@
+import importlib.util
 import os
+
+
+def _has_module(name):
+    return importlib.util.find_spec(name) is not None
 
 
 def _alias_enum(owner, alias, target):
@@ -12,7 +17,7 @@ def _alias_exec(owner):
 
 
 def _load_pyqt6():
-    from PyQt6 import QtWidgets, QtCore, QtGui
+    from PyQt6 import QtWidgets, QtCore, QtGui # type: ignore
 
     return QtWidgets, QtCore, QtGui, "PyQt6"
 
@@ -37,7 +42,14 @@ if preferred == "pyqt5":
 elif preferred == "pyqt6":
     QtWidgets, QtCore, QtGui, QT_API = _load_pyqt6()
 else:
-    try:
+    has_pyqt6 = _has_module("PyQt6")
+    has_pyqt5 = _has_module("PyQt5")
+    if has_pyqt6 and not has_pyqt5:
         QtWidgets, QtCore, QtGui, QT_API = _load_pyqt6()
-    except Exception:
+    elif has_pyqt5 and not has_pyqt6:
         QtWidgets, QtCore, QtGui, QT_API = _load_pyqt5()
+    else:
+        try:
+            QtWidgets, QtCore, QtGui, QT_API = _load_pyqt6()
+        except Exception:
+            QtWidgets, QtCore, QtGui, QT_API = _load_pyqt5()

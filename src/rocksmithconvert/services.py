@@ -5,11 +5,16 @@ from traceback import format_exc
 from typing import Any, Generator, Optional
 from rocksmithconvert.qt_wrapper import QtCore
 from shutil import copyfile
-from rocksmith.psarc import PSARC
 from rocksmithconvert.models import ProcessModel
 from pathlib import Path
 from time import sleep
 import unicodedata
+
+
+def _get_psarc_class():
+    from rocksmith.psarc import PSARC  # type: ignore[import-untyped]
+
+    return PSARC
 
 
 class _WorkerSignals(QtCore.QObject):
@@ -94,12 +99,13 @@ class _Converter:
 
     def _get_content(self, filename):
         content = None
+        psarc_class = _get_psarc_class()
         try:
             with open(filename, "rb") as fh:
-                content = PSARC(True).parse_stream(fh)
+                content = psarc_class(True).parse_stream(fh)
         except:
             with open(filename, "rb") as fh:
-                content = PSARC(False).parse_stream(fh)
+                content = psarc_class(False).parse_stream(fh)
         return content
 
     def _do_rename(
@@ -182,7 +188,7 @@ class _Converter:
             raise FileExistsError(error)
 
         with open(outputFilename, "wb") as fh:
-            PSARC().build_stream(new_content, fh)
+            _get_psarc_class()().build_stream(new_content, fh)
 
         if processModel.appId != "Disabled":
             self.signals.info.emit(f"App id set to {processModel.appId} for {path.basename(outputFilename)}")
