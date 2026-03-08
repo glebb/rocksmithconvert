@@ -63,8 +63,10 @@ The current app is the PyQt-based 2.x rewrite. It keeps pyrocksmith for PSARC ha
 
 ### Requirements
 
-- Python 3.6+
-- `requirements.txt` for general development
+- Python 3.12 recommended for development and packaging
+- Use a `universal2` Python 3.12 build from python.org for macOS builds that need to target both Apple Silicon and Intel
+- Python 3.14 may work for local development, but it is not the recommended packaging baseline for this project
+- `requirements.txt` for general development and PyQt5-based macOS builds
 - `requirements-m1.txt` for PyQt6-based macOS builds, including Apple Silicon and Intel builds created from Apple Silicon via Rosetta
 - `requirements-dev.txt` for tests and formatting tools
 
@@ -83,6 +85,10 @@ pip install -r requirements-dev.txt
 pip install -r requirements-m1.txt
 pip install -e src/.
 ```
+
+If you are setting up from scratch on macOS, use Python 3.12 first unless you are deliberately testing newer interpreter support.
+
+For older macOS targets such as 10.15 Catalina, prefer the PyQt5 path from `requirements.txt`. Current PyQt5 wheels are packaged for older Intel macOS deployment targets than current PyQt6 wheels.
 
 ### Run tests
 
@@ -109,15 +115,29 @@ pyuic6 -x src/rocksmithconvert/mainwindow.ui -o src/rocksmithconvert/mainwindow.
 After regenerating, replace the generated Qt imports with:
 
 ```python
-from rocksmithconvert.qt_wrapper import QtCore, QtWidgets
+from rocksmithconvert.qt_wrapper import QtCore, QtGui, QtWidgets
 ```
 
 This keeps the project compatible with both PyQt5 and PyQt6.
+
+For local compatibility checks, you can force a specific binding:
+
+```bash
+ROCKSMITHCONVERT_QT_API=pyqt5 python -m rocksmithconvert.convert_gui
+ROCKSMITHCONVERT_QT_API=pyqt6 python -m rocksmithconvert.convert_gui
+```
 
 ### Build a standalone app
 
 ```bash
 pyinstaller --clean RSConvert_GUI.spec
+```
+
+To package a specific Qt binding, set `ROCKSMITHCONVERT_QT_API` explicitly:
+
+```bash
+ROCKSMITHCONVERT_QT_API=pyqt5 pyinstaller --clean RSConvert_GUI.spec
+ROCKSMITHCONVERT_QT_API=pyqt6 pyinstaller --clean RSConvert_GUI.spec
 ```
 
 On Windows:
@@ -130,25 +150,44 @@ pyinstaller --name RSConvert_GUI --windowed --onefile src/rocksmithconvert/conve
 
 You can build an `x86_64` macOS app on Apple Silicon by running the build under Rosetta with an `x86_64`-capable Python installation.
 
+If you need older macOS compatibility such as 10.15 Catalina, prefer the PyQt5 build path. If you want the newer PyQt6 stack, treat it as a newer-macOS-only target unless you re-verify the bundled binary deployment targets.
+
 Recommended setup:
 
 - Install Rosetta 2.
 - Use a `universal2` Python from python.org rather than an `arm64`-only Python build.
-- Create the virtual environment from a Rosetta shell so Python, pip, PyQt6, and PyInstaller all run as `x86_64`.
+- Prefer Python 3.12 specifically and make sure `python3.12` resolves to that `universal2` install inside the Rosetta shell.
+- Create the virtual environment from a Rosetta shell so Python, pip, and PyInstaller all run as `x86_64`.
 
-Example workflow:
+PyQt5-oriented workflow for older macOS targets:
 
 ```bash
 softwareupdate --install-rosetta --agree-to-license
 arch -x86_64 zsh
-python3 -m venv .venv-intel
+python3.12 -m venv .venv-intel
+source .venv-intel/bin/activate
+python -m pip install --upgrade pip setuptools wheel
+pip install -r requirements-dev.txt
+pip install -r requirements.txt
+pip install -e src/.
+ROCKSMITHCONVERT_QT_API=pyqt5 python -m rocksmithconvert.convert_gui
+ROCKSMITHCONVERT_QT_API=pyqt5 PYINSTALLER_TARGET_ARCH=x86_64 pyinstaller --clean RSConvert_GUI.spec
+file dist/RSConvert_GUI.app/Contents/MacOS/RSConvert_GUI
+```
+
+PyQt6-oriented workflow for newer macOS targets:
+
+```bash
+softwareupdate --install-rosetta --agree-to-license
+arch -x86_64 zsh
+python3.12 -m venv .venv-intel
 source .venv-intel/bin/activate
 python -m pip install --upgrade pip setuptools wheel
 pip install -r requirements-dev.txt
 pip install -r requirements-m1.txt
 pip install -e src/.
-python -m rocksmithconvert.convert_gui
-PYINSTALLER_TARGET_ARCH=x86_64 pyinstaller --clean RSConvert_GUI.spec
+ROCKSMITHCONVERT_QT_API=pyqt6 python -m rocksmithconvert.convert_gui
+ROCKSMITHCONVERT_QT_API=pyqt6 PYINSTALLER_TARGET_ARCH=x86_64 pyinstaller --clean RSConvert_GUI.spec
 file dist/RSConvert_GUI.app/Contents/MacOS/RSConvert_GUI
 ```
 

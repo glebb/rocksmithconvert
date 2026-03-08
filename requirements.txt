@@ -1,3 +1,4 @@
-PyQt5
+PyQt5==5.15.10
+PyQt5-Qt5==5.15.18
 git+https://github.com/0x0L/rocksmith.git@d21b70b926fca00c7da1409e4ccd488fefac247d
-pyinstaller
+pyinstaller==6.19.0
