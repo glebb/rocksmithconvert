@@ -1,6 +1,7 @@
 from rocksmithconvert.qt_wrapper import QtCore
 from glob import glob
 from os import path
+from typing import List
 
 
 class AutoProcessor(QtCore.QObject):
@@ -11,14 +12,15 @@ class AutoProcessor(QtCore.QObject):
         super(AutoProcessor, self).__init__()
         self.autoProcessFolder = ""
         self.timer = QtCore.QTimer()
-        self.fileList = []
+        self.fileList: List[str] = []
         self.timer.timeout.connect(self.checkFiles)
 
     def checkFiles(self) -> bool:
         if not path.isdir(self.autoProcessFolder):
+            self.stop()
             self.folderNotSet.emit()
             return False
-        freshFiles = glob(self.autoProcessFolder + "/*.psarc")
+        freshFiles = glob(path.join(self.autoProcessFolder, "*.psarc"))
         changedFiles = list(set(freshFiles) - set(self.fileList))
         if len(changedFiles) > 0:
             self.filesAdded.emit(changedFiles)

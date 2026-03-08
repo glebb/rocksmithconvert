@@ -1,6 +1,7 @@
 from rocksmithconvert.qt_wrapper import QtCore, QtWidgets
 import os
 import glob
+from typing import List
 
 
 class DropArea(QtWidgets.QFrame):
@@ -19,11 +20,16 @@ class DropArea(QtWidgets.QFrame):
     def dropEvent(self, event: QtCore.QEvent):
         mimeData = event.mimeData()
         if mimeData.hasUrls():
-            files = []
+            files: List[str] = []
             for url in mimeData.urls():
                 localFile = url.toLocalFile()
                 if os.path.isdir(localFile):
-                    files.extend(glob.iglob(localFile + "**/*.psarc", recursive=True))
+                    files.extend(
+                        glob.iglob(
+                            os.path.join(localFile, "**", "*.psarc"),
+                            recursive=True,
+                        )
+                    )
                 else:
                     files.append(localFile)
             self.filesDropped.emit(files)

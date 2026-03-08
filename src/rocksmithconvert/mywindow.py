@@ -29,7 +29,7 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         try:
             format = QtCore.QSettings.IniFormat
             scope = QtCore.QSettings.UserScope
-        except:
+        except AttributeError:
             format = QtCore.QSettings.Format.IniFormat
             scope = QtCore.QSettings.Scope.UserScope
         self.settingsHandler = SettingsHandler(
@@ -141,8 +141,12 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.pyqtSlot(dict)
     def updateProgress(self, file: Dict[str, str]) -> None:
         self.progressBar.count += 1
+        try:
+            total = max(int(file.get("count", "0")), 1)
+        except (TypeError, ValueError):
+            total = 1
         self.progressBar.setValue(
-            round(self.progressBar.count / int(file["count"]) * 100)
+            round(self.progressBar.count / total * 100)
         )
         if file["processed"]:
             _, tail = path.split(file["processed"])

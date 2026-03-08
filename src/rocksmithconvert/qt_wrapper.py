@@ -1,3 +1,4 @@
+import importlib
 import importlib.util
 import os
 
@@ -23,7 +24,10 @@ def _load_pyqt6():
 
 
 def _load_pyqt5():
-    from PyQt5 import QtWidgets, QtCore, QtGui
+    pyqt5 = importlib.import_module("PyQt5")
+    QtWidgets = pyqt5.QtWidgets
+    QtCore = pyqt5.QtCore
+    QtGui = pyqt5.QtGui
 
     _alias_enum(QtWidgets.QSizePolicy, "Policy", QtWidgets.QSizePolicy)
     _alias_enum(QtWidgets.QFrame, "Shape", QtWidgets.QFrame)
@@ -51,5 +55,5 @@ else:
     else:
         try:
             QtWidgets, QtCore, QtGui, QT_API = _load_pyqt6()
-        except Exception:
+        except ImportError:
             QtWidgets, QtCore, QtGui, QT_API = _load_pyqt5()

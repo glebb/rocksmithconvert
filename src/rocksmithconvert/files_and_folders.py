@@ -27,5 +27,5 @@ def tryGetDefaultRocksmithPath() -> str:
 
 
 def filterAndSortPsarcFiles(files: List[str]) -> List[str]:
-    filesList = [file for file in files if file.endswith(".psarc")]
-    return filesList
+    filesList = [file for file in files if file.lower().endswith(".psarc")]
+    return sorted(filesList, key=str.lower)

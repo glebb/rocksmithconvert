@@ -1,5 +1,6 @@
 from os import path
 from json import loads
+from json import JSONDecodeError
 from re import sub
 from traceback import format_exc
 from typing import Any, Generator, Optional
@@ -59,20 +60,33 @@ class _Worker(QtCore.QRunnable):
         if not path.isfile(self.file):
             self.signals.info.emit(f"File does not exist: {self.file}.")
         else:
-            while Path(self.file).stat().st_size == 0:
-                sleep(1)
-                tryCount += 1
-                if tryCount > 20:
-                    self.signals.info.emit(
-                        f"Failed processing {self.file}. File size was 0."
-                    )
+            try:
+                while Path(self.file).stat().st_size == 0:
+                    sleep(1)
+                    tryCount += 1
+                    if tryCount > 20:
+                        self.signals.info.emit(
+                            f"Failed processing {self.file}. File size was 0."
+                        )
+                        self.signals.update.emit(
+                            {
+                                "original": self.file,
+                                "processed": name,
+                                "count": str(len(self.processModel.files)),
+                            }
+                        )
+                        return
+            except OSError:
+                self.signals.info.emit(
+                    f"Failed processing {self.file}. File became unavailable."
+                )
             try:
                 name = self.converter.process(self.file, self.processModel)
             except ValueError:
                 pass
             except FileExistsError:
                 pass
-            except:
+            except Exception:
                 self.signals.info.emit(f"Failed processing {self.file}.")
                 self.signals.info.emit(f"Unexpected error: {format_exc()}")
         self.signals.update.emit(
@@ -103,9 +117,12 @@ class _Converter:
         try:
             with open(filename, "rb") as fh:
                 content = psarc_class(True).parse_stream(fh)
-        except:
-            with open(filename, "rb") as fh:
-                content = psarc_class(False).parse_stream(fh)
+        except Exception:
+            try:
+                with open(filename, "rb") as fh:
+                    content = psarc_class(False).parse_stream(fh)
+            except Exception as second_error:
+                raise ValueError(f"Unable to parse PSARC file: {filename}") from second_error
         return content
 
     def _do_rename(
@@ -119,7 +136,11 @@ class _Converter:
             if fpath.endswith(".hsan"):
                 new_name = self._create_new_filename(tail, data, renameScheme)
                 break
-        outname = output_directory + "/" + new_name
+        if not new_name:
+            error = f"Could not rename {tail}: missing HSAN metadata"
+            self.signals.info.emit(error)
+            raise ValueError(error)
+        outname = path.join(output_directory, new_name)
         if path.isfile(outname):
             error = f"File exists: {new_name}"
             self.signals.info.emit(error)
@@ -133,11 +154,12 @@ class _Converter:
             error = f"Unexpected filename: {filename}"
             self.signals.info.emit(error)
             raise ValueError(error)
+        source_suffix = temp[-8:]
         if targetPlatform == "PC":
-            outname = filename.replace("_m.psarc", "_p.psarc")
+            outname = filename[:-8] + "_p.psarc" if source_suffix == "_m.psarc" else filename
             mac2pc = True
         elif targetPlatform == "MAC":
-            outname = filename.replace("_p.psarc", "_m.psarc")
+            outname = filename[:-8] + "_m.psarc" if source_suffix == "_p.psarc" else filename
             mac2pc = False
         else:
             error = f"Can only convert between MAC and PC filetypes: {filename}"
@@ -176,12 +198,12 @@ class _Converter:
                     tail, data, processModel.renameScheme
                 )
 
-        outputFilename = processModel.target + "/"
+        outputFilename = processModel.target
         if new_name:
-            outputFilename += new_name
+            outputFilename = path.join(outputFilename, new_name)
         else:
             new_name = filename
-            outputFilename += tail
+            outputFilename = path.join(outputFilename, tail)
         if not processModel.overwrite and path.isfile(outputFilename):
             error = f"File exists: {new_name}"
             self.signals.info.emit(error)
@@ -201,10 +223,19 @@ class _Converter:
             elif key == target:
                 yield value
 
+    def _get_required_metadata(self, data: dict, target: str) -> str:
+        value = next(self._find_by_key(data, target), None)
+        if not isinstance(value, str) or not value:
+            raise ValueError(f"Missing metadata field: {target}")
+        return value
+
     def _create_new_filename(self, original: str, data: str, renameScheme: str) -> str:
-        data_dict = loads(data)
-        artist = list(self._find_by_key(data_dict, "ArtistName"))[0]
-        song = list(self._find_by_key(data_dict, "SongName"))[0]
+        try:
+            data_dict = loads(data)
+        except JSONDecodeError as error:
+            raise ValueError("Invalid HSAN metadata") from error
+        artist = self._get_required_metadata(data_dict, "ArtistName")
+        song = self._get_required_metadata(data_dict, "SongName")
         dd = False
         if "dd_" in original.lower():
             dd = True
