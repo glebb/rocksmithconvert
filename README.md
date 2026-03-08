@@ -1,85 +1,127 @@
-# Rocksmith 2014 CDLC convert PC / Mac #
-Simple standalone OSX app to convert/rename Rocksmith 2014 .psarc files between PC and MAC.
+auto-processing feature, you can set the app to check desired folder at launch and do the processing automatically,
+# Rocksmith 2014 CDLC Convert PC / Mac
 
-Based on 0x0L's pyrocksmith (https://github.com/0x0L/rocksmith)
+Simple GUI app for converting or renaming Rocksmith 2014 `.psarc` files between PC and Mac formats.
+
+The app is based on 0x0L's pyrocksmith: https://github.com/0x0L/rocksmith
 
 ![Screenshot](docs/screenshot.png)
-## Download & install ##
-Download latest readymade package for OSX 10.12 and newer: https://github.com/glebb/rocksmithconvert/releases
 
-* Download the zip package
-* Unzip by double clicking the file (if needed, e.g. Safari does this automatically)
-* No installation needed, you can move the app to Applications folder if you like
-* Start the app -> osx security kicks in (the first time you run it):
-* Allow the app to run by checking osx System Preferences / Security & Privacy / General -> Allow
+## What it does
 
-## Usage ##
-Just drag & drop files you want to convert to the app (supports mass conversions).
-Additionally, you can choose to use short filenames or just rename(copy) the files without conversion.
+- Drag and drop one or more `.psarc` files into the app.
+- Convert between PC (`_p.psarc`) and Mac (`_m.psarc`) packages.
+- Rename files with shorter Rocksmith-friendly names.
+- Optionally set a custom app ID during conversion.
+- Watch a source folder and process new files automatically.
 
-If target file already exists, operation is skipped. Original files are not modified, the app always
-creates new files as a result of conversion/rename.
+Original files are never modified. The app always writes a new file to the target folder.
 
-Example: your CDLC is /Users/john/Downloads/Really_Long_Artist_Name-ThisIsJustATribute_p.psarc
-Dropping the file to the app and processing with conversion and rename options enabled, 
-following file is produced: /Users/john/Library/Application Support/Steam/steamapps/common/Rocksmith2014/dlc/ReallyLong-ThisIsJust_m.psarc
-(target folder of course depends on your selection).
+## Download and install
 
-The next time you run the app, settings are as you set them before. With remembering settings combined with
-auto-processing feature, you can set the app to check desired folder at launch and do the processing automatically,
-without any user interaction. You can use it to scan Downloads folder and automatically convert
-files dlc/cdlc folder. It doesn't matter what files are in the source folder, only files that are
-not in target already will be processed.
+Download the latest macOS release here:
+https://github.com/glebb/rocksmithconvert/releases
 
-If you don't use autoprocessing, you can just drop the files on the app while it's running to invoke processing.
-Additionally you can drop files directly on the app icon (e.g. on Dock) while holding down cmd (Option) before you start the drag.
-This will open the app and automatically process the files.
+1. Download the zip package.
+2. Unzip it if your browser does not do that automatically.
+3. Move the app anywhere you want, for example to Applications.
+4. On first launch, allow the app in macOS System Settings or System Preferences if Gatekeeper blocks it.
 
-If source folder contains both pc (_p.psarc) and mac (_m.psarc) files, the processor picks all of them
-and either copies or converts the files based on platform selection to the target folder.
+## Usage
 
-NOTE! Option for renaming is to avoid problems loading CDLC within Rocksmith. 
-This is achieved by removing all unecessary characters and also splitting Artist and Song name
-if needed. Using rename scheme is optional.
+Drop files onto the running app to process them. You can also drop files onto the app icon to launch and process them directly.
 
-## Versions ##
+Common options:
 
-1.1 Was the first public release. It is considerably different from the current version. See details from the
-[1.1 readme](https://github.com/glebb/rocksmithconvert/blob/v1.1/README.md). The main difference is that 1.1
-user interface was build on platypus and applescript. Most of it was implemented as pure bash script.
-It did (still does) its job, but considering the limitations, it was not feasible to develop it much further as
-adding new features became increasingly awkward.
+- Convert only
+- Rename only
+- Convert and rename
+- Overwrite existing target files
+- Auto-process new files from a source folder
 
-2.x Is the current branch, based on PyQt5/PyQt6. It still uses pyrocksmith as it's core for the psarc file handling,
-but otherwise it's a complete rewrite. New features include e.g. permanent settings and using threads for
-processing, making it much faster. In theory, it should also work cross platform.
+If the target file already exists and overwrite is disabled, the file is skipped.
 
-## Development & building from source ##
-The basic idea is to use pyrocksmith to parse the files and
-bundle everything to a nice and clean standalone osx app without additional
-dependencies. That's why the release filesize is so BIG! Batteries included. This is achieved
-by using pyinstaller to create a single executable from PyQt app.
+Example:
 
-### Requirements ###
-* Python 3.6+:
-   * `pip install -r requirements.txt`:
-      * PyQt5 (latest version which works in osx 10.12 is 5.13.2), or PyQt6 if building on modern mac (requirements-m1.txt)
-      * pyinstaller (https://pypi.org/project/pyinstaller/)
-      * git+https://github.com/0x0L/rocksmith.git
+Input:
+`/Users/john/Downloads/Really_Long_Artist_Name-ThisIsJustATribute_p.psarc`
 
-### Testing and running locally ###
-Install dependencies: `pip install -r requirements-dev.txt`
-Install as a local package: `pip install -e src/.`
-Run tests: `py.test`
-Run app: `convert_gui.py`
+Possible output:
+`/Users/john/Library/Application Support/Steam/steamapps/common/Rocksmith2014/dlc/ReallyLong-ThisIsJust_m.psarc`
 
-### UI ###
-Qt Creator is used to handle the master .ui.
-To convert "qt" files to python source, use pyuic5 or pyuic6 (e.g. `pyuic6 -x mainwindow.ui -o mainwindow.py`)
-To be compatible with both PyQt5 and PyQt6, remember to manually edit mainwindow.py and replace qt imports to
-`from rocksmithconvert.qt_wrapper import QtCore, QtWidgets`
+The exact result depends on your selected target folder, platform, rename mode, and app ID settings.
 
-### Making convert_gui.py as standalone executable ###
-Running `pyinstaller --name 'RSConvert_GUI' --windowed --onefile src/rocksmithconvert/convert_gui.py --clean --icon=docs/rsconvert.icns --add-binary src/rocksmithconvert/assets:assets` creates an executable under .dist/.
-On Windows: `pyinstaller --name RSConvert_GUI --windowed --onefile src/rocksmithconvert/convert_gui.py --clean --icon=docs/rsconvert.ico --add-binary src/rocksmithconvert/assets;assets`
+### Notes
+
+- Auto-processing remembers your settings and can watch a folder for new `.psarc` files.
+- Mixed PC and Mac source files are handled based on the target platform you selected.
+- Rename mode exists mainly to avoid Rocksmith issues with long or unusual CDLC filenames.
+
+## Development
+
+The current app is the PyQt-based 2.x rewrite. It keeps pyrocksmith for PSARC handling and adds a desktop UI, saved settings, and threaded processing.
+
+### Requirements
+
+- Python 3.6+
+- `requirements.txt` for general development
+- `requirements-m1.txt` for modern macOS / Apple Silicon builds using PyQt6
+- `requirements-dev.txt` for tests and formatting tools
+
+### Setup
+
+```bash
+pip install -r requirements-dev.txt
+pip install -e src/.
+```
+
+### Run tests
+
+```bash
+pytest
+```
+
+### Run the app locally
+
+```bash
+python -m rocksmithconvert.convert_gui
+```
+
+### UI workflow
+
+`mainwindow.ui` is the source of truth for the main window.
+
+Generate Python code with `pyuic5` or `pyuic6`, for example:
+
+```bash
+pyuic6 -x src/rocksmithconvert/mainwindow.ui -o src/rocksmithconvert/mainwindow.py
+```
+
+After regenerating, replace the generated Qt imports with:
+
+```python
+from rocksmithconvert.qt_wrapper import QtCore, QtWidgets
+```
+
+This keeps the project compatible with both PyQt5 and PyQt6.
+
+### Build a standalone app
+
+```bash
+pyinstaller --name 'RSConvert_GUI' --windowed --onefile src/rocksmithconvert/convert_gui.py --clean --icon=docs/rsconvert.icns --add-binary src/rocksmithconvert/assets:assets
+```
+
+On Windows:
+
+```bash
+pyinstaller --name RSConvert_GUI --windowed --onefile src/rocksmithconvert/convert_gui.py --clean --icon=docs/rsconvert.ico --add-binary src/rocksmithconvert/assets;assets
+```
+
+## Project layout
+
+- `src/rocksmithconvert/controllers.py`: main window controller and signal wiring
+- `src/rocksmithconvert/services.py`: conversion, worker threads, and file processing
+- `src/rocksmithconvert/models.py`: process model passed into workers
+- `src/rocksmithconvert/settings.py`: persistent UI settings
+- `tests/`: controller and GUI behavior tests
 
