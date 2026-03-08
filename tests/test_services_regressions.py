@@ -1,8 +1,10 @@
 import json
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
 
+import rocksmithconvert.qt_wrapper
 from rocksmithconvert.autoprocess import AutoProcessor
 from rocksmithconvert.files_and_folders import filterAndSortPsarcFiles
 from rocksmithconvert.models import ProcessModel
@@ -96,6 +98,41 @@ def test_autoprocess_stops_when_source_folder_disappears(tmp_path, mocker):
     assert result is False
     stop.assert_called_once()
     assert signals == ["folderNotSet"]
+
+
+def test_load_pyqt5_imports_qt_submodules_directly(mocker):
+    calls = []
+    fake_qtwidgets = SimpleNamespace(
+        QSizePolicy=type("QSizePolicy", (), {}),
+        QFrame=type("QFrame", (), {}),
+        QPlainTextEdit=type("QPlainTextEdit", (), {}),
+        QApplication=type("QApplication", (), {"exec_": lambda self: None}),
+    )
+    fake_qtcore = SimpleNamespace(Qt=type("Qt", (), {}))
+    fake_qtgui = SimpleNamespace()
+    modules = {
+        "PyQt5.QtWidgets": fake_qtwidgets,
+        "PyQt5.QtCore": fake_qtcore,
+        "PyQt5.QtGui": fake_qtgui,
+    }
+
+    def fake_import_module(name):
+        calls.append(name)
+        return modules[name]
+
+    mocker.patch.object(
+        rocksmithconvert.qt_wrapper.importlib,
+        "import_module",
+        side_effect=fake_import_module,
+    )
+
+    qtwidgets, qtcore, qtgui, qt_api = rocksmithconvert.qt_wrapper._load_pyqt5()
+
+    assert calls == ["PyQt5.QtWidgets", "PyQt5.QtCore", "PyQt5.QtGui"]
+    assert qtwidgets is fake_qtwidgets
+    assert qtcore is fake_qtcore
+    assert qtgui is fake_qtgui
+    assert qt_api == "PyQt5"
 
 
 def test_update_progress_handles_invalid_total_count(mocker, qtbot):

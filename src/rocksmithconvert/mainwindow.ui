@@ -132,17 +132,17 @@
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'.AppleSystemUIFont'; font-size:13pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Drop files to app for processing. Specify features to convert / rename / change app id of the songs.&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Original files remain as they are, new files are created to target folder. If target file exists, processing is skipped, unless &amp;quot;Overwrite existing&amp;quot; is selected.&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rename feature uses the format (artist-song) without special characters and will either shorten the filename to 10+10 characters, or use the full name for the new files. This is completely optional and you can keep the original filenames as well.&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;To change cdlc app ID, set the desired app ID. If option is disabled, app ID is untouched. App id needs to be changed, if you don't own cherub rock ODLC. In that case, the default value 221680 should work.&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;With auto-processing enabled, the app will check specified folder periodically and execute processing without further user interaction when new files are found. &lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;a href=&quot;https://github.com/glebb/rocksmithconvert&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0068da;&quot;&gt;Github page&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot; margin-top:0px; margin-bottom:8px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Drop one or more .psarc files onto the app to convert, rename, or change the App ID.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:8px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Original files are never modified. The app always writes a new file to the selected target folder. If a target file already exists, it is skipped unless &amp;quot;Overwrite existing&amp;quot; is enabled.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:4px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Common options:&lt;/p&gt;
+&lt;ul style=&quot;margin-top:0px; margin-bottom:8px; margin-left:18px; margin-right:0px;&quot;&gt;
+&lt;li&gt;Convert between PC (_p.psarc) and Mac (_m.psarc) packages.&lt;/li&gt;
+&lt;li&gt;Rename files with a short or full Rocksmith-friendly naming scheme.&lt;/li&gt;
+&lt;li&gt;Set a custom App ID when you need something other than the original has. Hint: 221680 should work.&lt;/li&gt;
+&lt;li&gt;Watch a source folder and auto-process new files using your saved settings.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:8px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rename mode is optional and mainly exists to avoid Rocksmith issues with long or unusual CDLC filenames.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;a href=&quot;https://github.com/glebb/rocksmithconvert&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0068da;&quot;&gt;GitHub project page&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="openExternalLinks">
             <bool>true</bool>

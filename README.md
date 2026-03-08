@@ -214,8 +214,8 @@ python -m pip install --upgrade pip setuptools wheel
 pip install -r requirements-dev.txt
 pip install -r requirements.txt
 pip install -e src/.
-ROCKSMITHCONVERT_QT_API=pyqt5 python -m rocksmithconvert.convert_gui
-ROCKSMITHCONVERT_STARTUP_TIMING=1 ROCKSMITHCONVERT_QT_API=pyqt5 PYINSTALLER_TARGET_ARCH=x86_64 pyinstaller --clean RSConvert_GUI.spec
+arch -x86_64 env ROCKSMITHCONVERT_QT_API=pyqt5 python -m rocksmithconvert.convert_gui
+arch -x86_64 env ROCKSMITHCONVERT_STARTUP_TIMING=1 ROCKSMITHCONVERT_QT_API=pyqt5 PYINSTALLER_TARGET_ARCH=x86_64 pyinstaller --clean RSConvert_GUI.spec
 file dist/RSConvert_GUI.app/Contents/MacOS/RSConvert_GUI
 du -sh dist/RSConvert_GUI.app
 ```
@@ -231,8 +231,8 @@ python -m pip install --upgrade pip setuptools wheel
 pip install -r requirements-dev.txt
 pip install -r requirements-m1.txt
 pip install -e src/.
-ROCKSMITHCONVERT_QT_API=pyqt6 python -m rocksmithconvert.convert_gui
-ROCKSMITHCONVERT_QT_API=pyqt6 PYINSTALLER_TARGET_ARCH=x86_64 pyinstaller --clean RSConvert_GUI.spec
+arch -x86_64 env ROCKSMITHCONVERT_QT_API=pyqt6 python -m rocksmithconvert.convert_gui
+arch -x86_64 env ROCKSMITHCONVERT_QT_API=pyqt6 PYINSTALLER_TARGET_ARCH=x86_64 pyinstaller --clean RSConvert_GUI.spec
 file dist/RSConvert_GUI.app/Contents/MacOS/RSConvert_GUI
 du -sh dist/RSConvert_GUI.app
 ```

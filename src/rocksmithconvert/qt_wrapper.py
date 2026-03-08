@@ -24,10 +24,9 @@ def _load_pyqt6():
 
 
 def _load_pyqt5():
-    pyqt5 = importlib.import_module("PyQt5")
-    QtWidgets = pyqt5.QtWidgets
-    QtCore = pyqt5.QtCore
-    QtGui = pyqt5.QtGui
+    QtWidgets = importlib.import_module("PyQt5.QtWidgets")
+    QtCore = importlib.import_module("PyQt5.QtCore")
+    QtGui = importlib.import_module("PyQt5.QtGui")
 
     _alias_enum(QtWidgets.QSizePolicy, "Policy", QtWidgets.QSizePolicy)
     _alias_enum(QtWidgets.QFrame, "Shape", QtWidgets.QFrame)
