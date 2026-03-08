@@ -65,13 +65,22 @@ The current app is the PyQt-based 2.x rewrite. It keeps pyrocksmith for PSARC ha
 
 - Python 3.6+
 - `requirements.txt` for general development
-- `requirements-m1.txt` for modern macOS / Apple Silicon builds using PyQt6
+- `requirements-m1.txt` for PyQt6-based macOS builds, including Apple Silicon and Intel builds created from Apple Silicon via Rosetta
 - `requirements-dev.txt` for tests and formatting tools
 
 ### Setup
 
 ```bash
 pip install -r requirements-dev.txt
+pip install -r requirements.txt
+pip install -e src/.
+```
+
+For PyQt6-based macOS development or packaging, install `requirements-m1.txt` instead of `requirements.txt`:
+
+```bash
+pip install -r requirements-dev.txt
+pip install -r requirements-m1.txt
 pip install -e src/.
 ```
 
@@ -108,7 +117,7 @@ This keeps the project compatible with both PyQt5 and PyQt6.
 ### Build a standalone app
 
 ```bash
-pyinstaller --name 'RSConvert_GUI' --windowed --onefile src/rocksmithconvert/convert_gui.py --clean --icon=docs/rsconvert.icns --add-binary src/rocksmithconvert/assets:assets
+pyinstaller --clean RSConvert_GUI.spec
 ```
 
 On Windows:
@@ -116,6 +125,36 @@ On Windows:
 ```bash
 pyinstaller --name RSConvert_GUI --windowed --onefile src/rocksmithconvert/convert_gui.py --clean --icon=docs/rsconvert.ico --add-binary src/rocksmithconvert/assets;assets
 ```
+
+### Build an Intel macOS app on Apple Silicon
+
+You can build an `x86_64` macOS app on Apple Silicon by running the build under Rosetta with an `x86_64`-capable Python installation.
+
+Recommended setup:
+
+- Install Rosetta 2.
+- Use a `universal2` Python from python.org rather than an `arm64`-only Python build.
+- Create the virtual environment from a Rosetta shell so Python, pip, PyQt6, and PyInstaller all run as `x86_64`.
+
+Example workflow:
+
+```bash
+softwareupdate --install-rosetta --agree-to-license
+arch -x86_64 zsh
+python3 -m venv .venv-intel
+source .venv-intel/bin/activate
+python -m pip install --upgrade pip setuptools wheel
+pip install -r requirements-dev.txt
+pip install -r requirements-m1.txt
+pip install -e src/.
+python -m rocksmithconvert.convert_gui
+PYINSTALLER_TARGET_ARCH=x86_64 pyinstaller --clean RSConvert_GUI.spec
+file dist/RSConvert_GUI.app/Contents/MacOS/RSConvert_GUI
+```
+
+The final `file` command should report `x86_64`. If it reports `arm64`, the virtual environment was created from the wrong interpreter.
+
+For a native Apple Silicon build, run the same command without Rosetta and set `PYINSTALLER_TARGET_ARCH=arm64` if you want the target to be explicit.
 
 ## Project layout
 
