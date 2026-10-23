@@ -3,6 +3,8 @@ auto-processing feature, you can set the app to check desired folder at launch a
 
 Simple GUI app for converting or renaming Rocksmith 2014 `.psarc` files between PC and Mac formats.
 
+> **New in 3.0:** a native macOS rewrite in Swift is in [`macos/`](macos/README.md). It is a 1.4 MB sandboxed menu bar app, more than 10× faster, and it watches folders with the window closed. The Python/Qt 2.x app described below is kept for reference and for Windows.
+
 The app is based on 0x0L's pyrocksmith: https://github.com/0x0L/rocksmith
 
 ![Screenshot](docs/screenshot.png)
