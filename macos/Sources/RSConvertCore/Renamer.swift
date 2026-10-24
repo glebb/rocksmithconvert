@@ -40,7 +40,7 @@ public enum Renamer {
     }
 
     /// - Parameters:
-    ///   - originalName: filename used to detect dynamic-difficulty (`dd_`) packages.
+    ///   - originalName: filename used to detect dynamic-difficulty (`_DD_`) packages.
     ///   - suffix: e.g. `_m.psarc`.
     public static func filename(for meta: Metadata, scheme: RenameScheme, originalName: String, suffix: String) throws -> String {
         var artist = Array(meta.artist.unicodeScalars)
@@ -54,7 +54,7 @@ public enum Renamer {
             song = Array(song.filter(isASCIILetter).prefix(max(maxSong, 0)))
         }
         var songString = String(String.UnicodeScalarView(song))
-        if originalName.lowercased().contains("dd_") { songString += "DD" }
+        if isDynamicDifficulty(originalName) { songString += "DD" }
 
         let clean = { (s: String) in
             String(String.UnicodeScalarView(s.decomposedStringWithCompatibilityMapping.unicodeScalars.filter {
@@ -65,6 +65,12 @@ public enum Renamer {
         let s = clean(songString)
         guard !a.isEmpty, !s.isEmpty else { throw ConvertError.metadata("artist or song has no usable characters") }
         return "\(a)-\(s)\(suffix)"
+    }
+
+    /// True when "DD" appears as a separate word in the name (`Song_DD_p`, `Song-dd`),
+    /// not merely inside one (`Kidd_Rock`, `Added_p`).
+    static func isDynamicDifficulty(_ name: String) -> Bool {
+        name.lowercased().split(whereSeparator: { !$0.isLetter && !$0.isNumber }).contains("dd")
     }
 
     private static func isASCIILetter(_ c: Unicode.Scalar) -> Bool { ("A"..."Z").contains(c) || ("a"..."z").contains(c) }

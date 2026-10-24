@@ -5,7 +5,7 @@ import RSConvertCore
 
 func usage() -> Never {
     FileHandle.standardError.write(Data("""
-    usage: rsconvert-cli [--version] [--to mac|pc] [--rename short|full] [--appid ID] [--overwrite] -o OUTPUT_DIR FILE...
+    usage: rsconvert-cli [--version] [--to mac|pc] [--rename short|full] [--appid ID] [--overwrite] -o OUTPUT_DIR [--] FILE...
 
     """.utf8))
     exit(64)
@@ -24,7 +24,13 @@ while let arg = args.next() {
     case "-o", "--output": guard let v = args.next() else { usage() }; output = URL(fileURLWithPath: v, isDirectory: true)
     case "--version": print("rsconvert-cli \(RSConvertVersion.string)"); exit(0)
     case "-h", "--help": usage()
-    default: files.append(URL(fileURLWithPath: arg))
+    case "--": while let f = args.next() { files.append(URL(fileURLWithPath: f)) }
+    default:
+        if arg.hasPrefix("-") {
+            FileHandle.standardError.write(Data("rsconvert-cli: unknown option \(arg)\n".utf8))
+            usage()
+        }
+        files.append(URL(fileURLWithPath: arg))
     }
 }
 guard let output, !files.isEmpty else { usage() }

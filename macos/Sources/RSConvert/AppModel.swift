@@ -21,15 +21,20 @@ final class AppModel {
 
     private struct Job: Sendable {
         let url: URL
+        /// Canonical path, used for de-duplication and the watch ledger.
+        let key: String
         let origin: Origin
+        /// Settings at the time the file was queued, so changes mid-batch don't affect it.
+        let options: ConvertOptions
+        let output: URL
     }
 
     // MARK: Settings (persisted)
 
-    var targetPlatform: Platform? { didSet { defaults.set(targetPlatform?.rawValue, forKey: "targetPlatform") } }
-    var renameScheme: RenameScheme? { didSet { defaults.set(renameScheme?.rawValue, forKey: "renameScheme") } }
-    var appIDEnabled: Bool { didSet { defaults.set(appIDEnabled, forKey: "appIDEnabled") } }
-    var appID: String { didSet { defaults.set(appID, forKey: "appID") } }
+    var targetPlatform: Platform? { didSet { defaults.set(targetPlatform?.rawValue, forKey: "targetPlatform"); optionsChanged() } }
+    var renameScheme: RenameScheme? { didSet { defaults.set(renameScheme?.rawValue, forKey: "renameScheme"); optionsChanged() } }
+    var appIDEnabled: Bool { didSet { defaults.set(appIDEnabled, forKey: "appIDEnabled"); optionsChanged() } }
+    var appID: String { didSet { defaults.set(appID, forKey: "appID"); optionsChanged() } }
     var overwrite: Bool { didSet { defaults.set(overwrite, forKey: "overwrite") } }
     var notifyOnBackground: Bool { didSet { defaults.set(notifyOnBackground, forKey: "notify") } }
     var watchEnabled: Bool {
@@ -122,6 +127,13 @@ final class AppModel {
         rescanWatchFolder()
     }
 
+    /// Watched files rejected because of a settings problem were never recorded,
+    /// so once the settings become usable a rescan picks them up again.
+    private func optionsChanged() {
+        guard lastReportedProblem != nil, configurationProblem == nil else { return }
+        rescanWatchFolder()
+    }
+
     // MARK: Watching
 
     private func restartWatching() {
@@ -135,7 +147,7 @@ final class AppModel {
             watchProblem = watchFolder == nil ? "No watch folder chosen" : "Watch folder is missing"
             return
         }
-        if let out = outputFolder, Self.samePath(out, folder) {
+        if let out = outputFolder, FileScan.samePath(out, folder) {
             watchProblem = "Watch folder must differ from the output folder"
             return
         }
@@ -155,14 +167,17 @@ final class AppModel {
         let files = (try? FileManager.default.contentsOfDirectory(
             at: folder, includingPropertiesForKeys: [.fileSizeKey, .contentModificationDateKey, .isRegularFileKey],
             options: [.skipsHiddenFiles])) ?? []
+        // Keys are canonical so they match files queued by hand from this folder.
+        let folderKey = FileScan.pathKey(folder)
         var present = Set<String>()
         for file in files where file.pathExtension.lowercased() == "psarc" {
-            present.insert(file.path)
-            guard let fp = ProcessedLedger.Fingerprint(file), !ledger.contains(file.path, fp),
-                  !queuedPaths.contains(file.path) else { continue }
-            if pending[file.path] == nil { pending[file.path] = fp }
+            let key = folderKey + "/" + file.lastPathComponent
+            present.insert(key)
+            guard let fp = ProcessedLedger.Fingerprint(file), !ledger.contains(key, fp),
+                  !queuedPaths.contains(key) else { continue }
+            if pending[key] == nil { pending[key] = fp }
         }
-        ledger.prune(folder: folder.path, keeping: present)
+        ledger.prune(folder: folderKey, keeping: present)
         scheduleStabilityCheck()
     }
 
@@ -197,9 +212,15 @@ final class AppModel {
     // MARK: Processing
 
     func enqueue(_ urls: [URL], origin: Origin) {
-        let files = Self.expand(urls)
-            .filter { !queuedPaths.contains($0.path) }
-            .sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
+        let expanded = FileScan.expand(urls)
+        if expanded.truncated {
+            info("Only the first \(FileScan.maxFiles.formatted()) .psarc files were added; process the rest separately")
+        }
+        var seen = Set<String>()
+        let files = expanded.files
+            .map { (url: $0, key: FileScan.pathKey($0)) }
+            .filter { !queuedPaths.contains($0.key) && seen.insert($0.key).inserted }
+            .sorted { $0.url.lastPathComponent.localizedStandardCompare($1.url.lastPathComponent) == .orderedAscending }
         guard !files.isEmpty else {
             if origin == .manual, !urls.isEmpty { info("No .psarc files found") }
             return
@@ -214,10 +235,12 @@ final class AppModel {
             return
         }
         lastReportedProblem = nil
+        guard let output = outputFolder else { return }
+        let options = self.options
         if !isBusy { batchTotal = 0; batchDone = 0 }
         for file in files {
-            queue.append(Job(url: file, origin: origin))
-            queuedPaths.insert(file.path)
+            queue.append(Job(url: file.url, key: file.key, origin: origin, options: options, output: output))
+            queuedPaths.insert(file.key)
         }
         batchTotal += files.count
         onStatusChange?()
@@ -225,15 +248,13 @@ final class AppModel {
     }
 
     private func pump() {
-        guard let output = outputFolder else { return }
-        let options = self.options
         while running < maxConcurrent, !queue.isEmpty {
             let job = queue.removeFirst()
             running += 1
             let priority: TaskPriority = job.origin == .watch ? .utility : .userInitiated
             Task.detached(priority: priority) { [weak self] in
                 let fingerprint = ProcessedLedger.Fingerprint(job.url)
-                let result = Result { try Converter.process(job.url, into: output, options: options) }
+                let result = Result { try Converter.process(job.url, into: job.output, options: job.options) }
                 await self?.finish(job, result, fingerprint: fingerprint)
             }
         }
@@ -242,7 +263,7 @@ final class AppModel {
     private func finish(_ job: Job, _ result: Result<ConvertOutcome, any Error>, fingerprint: ProcessedLedger.Fingerprint?) {
         running -= 1
         batchDone += 1
-        queuedPaths.remove(job.url.path)
+        queuedPaths.remove(job.key)
         let name = job.url.lastPathComponent
         switch result {
         case .success(.written(let out, let summary)):
@@ -254,7 +275,8 @@ final class AppModel {
             append(LogEntry(kind: .failure, message: "\(name): \(error.localizedDescription)", url: job.url))
         }
         // Remember watched files whatever the outcome; a changed file gets a new fingerprint and is retried.
-        if job.origin == .watch, let fingerprint { ledger.record(job.url.path, fingerprint) }
+        // Files dropped by hand from the watch folder count too, so the watcher doesn't redo them.
+        if let fingerprint, job.origin == .watch || isInWatchFolder(job.key) { ledger.record(job.key, fingerprint) }
         if !isBusy { batchFinished() }
         onStatusChange?()
         pump()
@@ -285,27 +307,9 @@ final class AppModel {
 
     // MARK: Helpers
 
-    /// Expands folders (recursively) and keeps only .psarc files.
-    nonisolated static func expand(_ urls: [URL]) -> [URL] {
-        var out = [URL]()
-        for url in urls {
-            var isDir: ObjCBool = false
-            guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir) else { continue }
-            if isDir.boolValue {
-                let walker = FileManager.default.enumerator(
-                    at: url, includingPropertiesForKeys: [.isRegularFileKey], options: [.skipsHiddenFiles, .skipsPackageDescendants])
-                while out.count < 10_000, let child = walker?.nextObject() as? URL {
-                    if child.pathExtension.lowercased() == "psarc" { out.append(child) }
-                }
-            } else if url.pathExtension.lowercased() == "psarc" {
-                out.append(url)
-            }
-        }
-        return out
-    }
-
-    nonisolated static func samePath(_ a: URL, _ b: URL) -> Bool {
-        a.standardizedFileURL.resolvingSymlinksInPath().path.lowercased() == b.standardizedFileURL.resolvingSymlinksInPath().path.lowercased()
+    private func isInWatchFolder(_ key: String) -> Bool {
+        guard let watchFolder else { return false }
+        return (key as NSString).deletingLastPathComponent == FileScan.pathKey(watchFolder)
     }
 }
 

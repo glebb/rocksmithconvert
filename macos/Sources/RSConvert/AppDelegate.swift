@@ -28,6 +28,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         statusItem.button?.window?.delegate = self
         model.onStatusChange = { [weak self] in self?.updateStatusIcon() }
         updateStatusIcon()
+        // The setting defaults to on, so ask once up front; repeat calls are no-ops.
+        if model.notifyOnBackground { Notifier.requestAuthorization() }
 
         finishedLaunching = true
         let launchedAtLogin = NSAppleEventManager.shared().currentAppleEvent?

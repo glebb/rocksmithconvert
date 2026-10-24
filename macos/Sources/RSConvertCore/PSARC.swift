@@ -50,7 +50,9 @@ public final class PSARCArchive: Sendable {
     public convenience init(url: URL) throws {
         let data: Data
         do {
-            data = try Data(contentsOf: url, options: [.alwaysMapped])
+            // Map only where safe: a mapped file on a network or removable volume
+            // that shrinks or disappears mid-read would crash with SIGBUS.
+            data = try Data(contentsOf: url, options: [.mappedIfSafe])
         } catch {
             throw PSARCError.corrupt("cannot read file (\(error.localizedDescription))")
         }

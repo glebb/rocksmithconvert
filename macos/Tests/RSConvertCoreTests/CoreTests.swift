@@ -317,6 +317,110 @@ func renameMatchesPython(artist: String, song: String, original: String, short: 
     }
 }
 
+@Test func dynamicDifficultyNeedsSeparateWord() {
+    for name in ["song_dd_p.psarc", "Song_DD_m.psarc", "song-dd.psarc", "dd_song_p.psarc", "Song (DD)_p.psarc"] {
+        #expect(Renamer.isDynamicDifficulty(name), "\(name)")
+    }
+    for name in ["Kidd_Rock_p.psarc", "Added_m.psarc", "Odd_Song_p.psarc", "ddd_p.psarc"] {
+        #expect(!Renamer.isDynamicDifficulty(name), "\(name)")
+    }
+}
+
+@Test func renameKeepsSuffixWhenPlatformUndetectable() throws {
+    let dir = try tempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    // Neither Mac nor PC paths inside, so the platform can't be read from content.
+    let hsan = try JSONSerialization.data(withJSONObject: ["ArtistName": "Muse", "SongName": "Uprising"])
+    let src = dir.appendingPathComponent("muse_p.psarc")
+    try writeArchive([.init(name: "manifests/x/x.hsan", payload: .bytes(Array(hsan)))]).write(to: src)
+    let out = dir.appendingPathComponent("out", isDirectory: true)
+    try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
+    guard case .written(let url, _) = try Converter.process(src, into: out, options: .init(rename: .full)) else {
+        Issue.record("expected write"); return
+    }
+    #expect(url.lastPathComponent == "Muse-Uprising_p.psarc")
+}
+
+@Test func sngRekeyUsesDetectedPayloadEnd() throws {
+    let plain = Array((0..<10_000).map { UInt8(truncatingIfNeeded: $0 &* 7) })
+    let mac = try encryptSNG(plain, key: Keys.sngMac)
+    // Preferring the wrong platform still finds the right key.
+    let key = try SNG.detectKey(mac, preferred: .pc)
+    #expect(key.platform == .mac)
+    let pc = try SNG.rekey(mac, from: key.platform, to: .pc, payloadEnd: key.payloadEnd)
+    #expect(try decryptSNG(pc, key: Keys.sngPC) == plain)
+    #expect(Array(pc.suffix(56)) == Array(mac.suffix(56)))
+    #expect(throws: PSARCError.self) { try SNG.rekey(mac, from: .mac, to: .pc, payloadEnd: mac.count + 1) }
+}
+
+@Test func missingAppIDEntryIsReported() throws {
+    let dir = try tempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let src = dir.appendingPathComponent("noid_m.psarc")
+    try writeArchive([.init(name: "songs/bin/macos/a.txt", payload: .bytes(Array("x".utf8)))]).write(to: src)
+    let out = dir.appendingPathComponent("out", isDirectory: true)
+    try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
+
+    // App ID was the only request: nothing is written.
+    let skipped = try Converter.process(src, into: out, options: .init(appID: "221680"))
+    #expect(skipped == .skipped(out.appendingPathComponent("noid_m.psarc"), reason: "not written: package has no App ID entry"))
+    #expect(try FileManager.default.contentsOfDirectory(atPath: out.path).isEmpty)
+
+    // Alongside a conversion: written, and the summary says the App ID was left alone.
+    guard case .written(_, let summary) = try Converter.process(src, into: out, options: .init(targetPlatform: .pc, appID: "221680"))
+    else { Issue.record("expected write"); return }
+    #expect(summary.contains("no App ID entry"))
+}
+
+// MARK: - File intake
+
+@Test func pathKeyUnifiesEquivalentPaths() throws {
+    let dir = try tempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let file = dir.appendingPathComponent("a_m.psarc")
+    try Data().write(to: file)
+    let link = dir.appendingPathComponent("link", isDirectory: true)
+    try FileManager.default.createSymbolicLink(at: link, withDestinationURL: dir)
+    let viaDots = dir.appendingPathComponent("sub/../a_m.psarc")
+    let viaLink = link.appendingPathComponent("a_m.psarc")
+    #expect(FileScan.pathKey(viaDots) == FileScan.pathKey(file))
+    #expect(FileScan.pathKey(viaLink) == FileScan.pathKey(file))
+    // /tmp-style temp dirs live under /private on macOS.
+    #expect(FileScan.pathKey(URL(fileURLWithPath: "/private" + FileScan.pathKey(file))) == FileScan.pathKey(file))
+}
+
+@Test func samePathRespectsVolumeCaseSensitivity() throws {
+    let dir = try tempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let lower = dir.appendingPathComponent("dlc", isDirectory: true)
+    try FileManager.default.createDirectory(at: lower, withIntermediateDirectories: true)
+    let upper = dir.appendingPathComponent("DLC", isDirectory: true)
+    let caseSensitive = try dir.resourceValues(forKeys: [.volumeSupportsCaseSensitiveNamesKey]).volumeSupportsCaseSensitiveNames ?? false
+    if caseSensitive {
+        try FileManager.default.createDirectory(at: upper, withIntermediateDirectories: true)
+        #expect(!FileScan.samePath(lower, upper))
+    } else {
+        #expect(FileScan.samePath(lower, upper))
+    }
+    #expect(FileScan.samePath(lower, dir.appendingPathComponent("x/../dlc", isDirectory: true)))
+    #expect(!FileScan.samePath(lower, dir))
+}
+
+@Test func expandReportsTruncation() throws {
+    let dir = try tempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    try FileManager.default.createDirectory(at: dir.appendingPathComponent("sub"), withIntermediateDirectories: true)
+    for name in ["a_m.psarc", "b_p.PSARC", "notes.txt", "sub/c_m.psarc"] {
+        try Data().write(to: dir.appendingPathComponent(name))
+    }
+    let all = FileScan.expand([dir])
+    #expect(all.files.count == 3 && !all.truncated)
+    let exact = FileScan.expand([dir], limit: 3)
+    #expect(exact.files.count == 3 && !exact.truncated)
+    let cut = FileScan.expand([dir], limit: 2)
+    #expect(cut.files.count == 2 && cut.truncated)
+}
+
 // MARK: - Real packages (set RSCONVERT_SAMPLES to a folder of .psarc files)
 
 @Test(.enabled(if: ProcessInfo.processInfo.environment["RSCONVERT_SAMPLES"] != nil))

@@ -78,20 +78,21 @@ enum SNG {
     static let headerSize = 24
     static let maxDecompressed = 64 << 20
 
-    /// Returns which platform key decrypts this SNG, verified by a full decompress.
-    static func detectKey(_ sng: [UInt8], preferred: Platform) throws -> Platform {
+    /// Returns which platform key decrypts this SNG, verified by a full decompress,
+    /// plus the end offset of the encrypted payload so callers needn't decrypt again.
+    static func detectKey(_ sng: [UInt8], preferred: Platform) throws -> (platform: Platform, payloadEnd: Int) {
         for platform in [preferred, preferred == .mac ? .pc : .mac] {
-            if (try? decryptedPayloadLength(sng, key: platform.sngKey)) != nil { return platform }
+            if let end = try? decryptedPayloadLength(sng, key: platform.sngKey) { return (platform, end) }
         }
         throw PSARCError.corrupt("SNG cannot be decrypted with either platform key")
     }
 
     /// Re-encrypts with the target key. The compressed payload is reused as-is
     /// (no recompression); only the keystream changes. The IV and trailing
-    /// signature block are carried over.
-    static func rekey(_ sng: [UInt8], from source: Platform, to target: Platform) throws -> [UInt8] {
+    /// signature block are carried over. `payloadEnd` comes from `detectKey`.
+    static func rekey(_ sng: [UInt8], from source: Platform, to target: Platform, payloadEnd: Int) throws -> [UInt8] {
         guard source != target else { return sng }
-        let payloadEnd = try decryptedPayloadLength(sng, key: source.sngKey)
+        guard payloadEnd > headerSize, payloadEnd <= sng.count else { throw PSARCError.corrupt("SNG payload range") }
         let iv = Array(sng[8..<headerSize])
         var out = sng
         try out.withUnsafeMutableBytes { buf in

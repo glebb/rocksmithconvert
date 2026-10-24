@@ -64,11 +64,13 @@ public enum Converter {
         var currentAppID: String?
         if let appIDEntry { currentAppID = String(bytes: try archive.read(appIDEntry, maxSize: 64), encoding: .utf8) }
         let needsAppID = options.appID != nil && appIDEntry != nil && currentAppID != options.appID
+        let missingAppID = options.appID != nil && appIDEntry == nil
 
         // Output filename.
         let originalName = source.lastPathComponent
         let stem = String(originalName.dropLast(".psarc".count))
-        let suffix = target?.fileSuffix ?? ".psarc"
+        // Undetectable platform: keep whatever suffix the original name carried.
+        let suffix = target?.fileSuffix ?? (hasPlatformSuffix(stem) ? String(originalName.suffix(8)) : ".psarc")
         let renamedFromSuffix = needsConversion ? stripPlatformSuffix(stem) + suffix : originalName
         let outputName: String
         if let scheme = options.rename {
@@ -80,6 +82,10 @@ public enum Converter {
         }
 
         let destination = outputDirectory.appendingPathComponent(outputName, isDirectory: false)
+        // An App ID change was the only request, but there is nothing to change.
+        if missingAppID, options.targetPlatform == nil, options.rename == nil {
+            return .skipped(destination, reason: "not written: package has no App ID entry")
+        }
         if isSameFile(source, destination) { throw ConvertError.wouldReplaceSource }
         if !options.overwrite, FileManager.default.fileExists(atPath: destination.path) {
             return .skipped(destination, reason: "already exists")
@@ -90,6 +96,7 @@ public enum Converter {
         if needsAppID, let id = options.appID { actions.append("App ID \(id)") }
         if options.rename != nil { actions.append("renamed") }
         if actions.isEmpty { actions.append("copied") }
+        if missingAppID { actions.append("App ID unchanged: package has no App ID entry") }
 
         let written = try atomicWrite(to: destination, overwrite: options.overwrite) { tmp in
             if needsConversion || needsAppID {
@@ -116,8 +123,8 @@ public enum Converter {
                 // Zero-length SNGs exist as placeholders (e.g. RS1 compatibility packs); nothing to re-key.
                 if entry.name.hasSuffix(".sng"), entry.name.contains(source.sngDirectory), entry.length > 0 {
                     let sng = try archive.read(entry)
-                    let actual = try SNG.detectKey(sng, preferred: source)
-                    payload = .bytes(try SNG.rekey(sng, from: actual, to: target))
+                    let key = try SNG.detectKey(sng, preferred: source)
+                    payload = .bytes(try SNG.rekey(sng, from: key.platform, to: target, payloadEnd: key.payloadEnd))
                 } else if entry.name.hasSuffix("aggregategraph.nt") {
                     payload = .bytes(target.mapAggregateGraph(try archive.read(entry)))
                 }
