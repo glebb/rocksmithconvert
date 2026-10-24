@@ -2,5 +2,5 @@
 /// this line and stamps it into the app bundle's Info.plist. Releases are
 /// tagged in git with the same string (e.g. `3.0.0`).
 public enum RSConvertVersion {
-    public static let string = "3.0.0"
+    public static let string = "3.0.1"
 }
