@@ -447,3 +447,158 @@ func realPackagesRoundTripByteIdentical() throws {
         }
     }
 }
+
+// MARK: - RS Extended Range native packages (PSXR, plain archive, plain SNG)
+
+/// A plain SNG wrapper: flags 1, zero IV, zlib body, zero signature.
+func plainSNG(_ body: [UInt8]) throws -> [UInt8] {
+    var out = [UInt8]()
+    out.appendLE32(74); out.appendLE32(1)
+    out += [UInt8](repeating: 0, count: 16)
+    out.appendLE32(UInt32(body.count))
+    out += try body.withUnsafeBytes { try Zlib.deflate($0) }
+    return out + [UInt8](repeating: 0, count: 56)
+}
+
+/// Shaped like DotCharter's native export: PSXR magic, plain table of contents,
+/// every SNG plain (a 7-string SNXR lead and a stock rhythm), ExtendedRange manifests.
+func makeNativePackage(_ platform: Platform, magic: String = "PSXR") throws -> Data {
+    let dir = platform == .mac ? "macos" : "generic"
+    let audio = platform == .mac ? "mac" : "windows"
+    let tag = platform == .mac ? "macos" : "dx9"
+    let snxr = Array("SNXR".utf8) + [1, 0, 7, 0] + (0..<40_000).map { UInt8(truncatingIfNeeded: $0 &* 13) } + [UInt8](repeating: 0, count: 256)
+    let stock = (0..<30_000).map { UInt8(truncatingIfNeeded: $0 &* 7) }
+    let lead: [String: Any] = ["ArrangementName": "Lead", "ArtistName": "Nickelback", "SongName": "Burn It to the Ground",
+                               "ExtendedRange": ["Version": 1],
+                               "Tuning": Dictionary(uniqueKeysWithValues: (0..<7).map { ("string\($0)", 0) })]
+    let hsan = try JSONSerialization.data(withJSONObject: ["Entries": ["lead": ["Attributes": lead]]])
+    let graph = "\u{FEFF}<urn:x> <tag> \"\(tag)\".\n<urn:y> <relpath> \"/songs/bin/\(dir)/song_lead.sng\".\n"
+    let items: [PSARCWriter.Item] = [
+        .init(name: "songs/bin/\(dir)/song_lead.sng", payload: .bytes(try plainSNG(snxr))),
+        .init(name: "songs/bin/\(dir)/song_rhythm.sng", payload: .bytes(try plainSNG(stock))),
+        .init(name: "manifests/songs_dlc_song/songs_dlc_song.hsan", payload: .bytes(Array(hsan))),
+        .init(name: "manifests/songs_dlc_song/song_lead.json", payload: .bytes(Array(hsan))),
+        .init(name: "song_aggregategraph.nt", payload: .bytes(Array(graph.utf8))),
+        .init(name: "audio/\(audio)/123.wem", payload: .bytes((0..<150_000).map { _ in UInt8.random(in: 0...255) })),
+        .init(name: "appid.appid", payload: .bytes(Array("248750".utf8))),
+    ]
+    let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    FileManager.default.createFile(atPath: url.path, contents: nil)
+    defer { try? FileManager.default.removeItem(at: url) }
+    let handle = try FileHandle(forWritingTo: url)
+    try PSARCWriter.write(items, to: handle, format: .init(magic: Array(magic.utf8), encryptTOC: false))
+    try handle.close()
+    return try Data(contentsOf: url)
+}
+
+func headerFlags(_ data: Data) -> UInt32 { [UInt8](data.prefix(32)).be32(28) }
+
+@Test func readsNativePackage() throws {
+    let data = try makeNativePackage(.pc)
+    #expect(Array(data.prefix(4)) == Array("PSXR".utf8))
+    #expect(headerFlags(data) == 0)
+    let archive = try PSARCArchive(data: data)
+    #expect(archive.isNative && !archive.tocEncrypted)
+    #expect(Platform.detect(archive.entries.map(\.name)) == .pc)
+    #expect(try SNG.isPlain(archive.read(try #require(archive.entry(named: "song_lead.sng")))))
+    #expect(try !PSARCArchive(data: makePackage(.pc)).isNative)
+    // Other magics are still refused.
+    var other = data
+    other.replaceSubrange(0..<4, with: Array("PSXX".utf8))
+    #expect(throws: PSARCError.notPSARC) { try PSARCArchive(data: other) }
+}
+
+@Test func convertsNativePackagePCToMacAndBack() throws {
+    let dir = try tempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let src = dir.appendingPathComponent("Nickelback_Burn_v2_rsxr_p.psarc")
+    let original = try makeNativePackage(.pc)
+    try original.write(to: src)
+    let mac = dir.appendingPathComponent("mac", isDirectory: true)
+    let pc = dir.appendingPathComponent("pc", isDirectory: true)
+    for d in [mac, pc] { try FileManager.default.createDirectory(at: d, withIntermediateDirectories: true) }
+
+    guard case .written(let macURL, let summary) = try Converter.process(src, into: mac, options: .init(targetPlatform: .mac))
+    else { Issue.record("expected write"); return }
+    #expect(macURL.lastPathComponent == "Nickelback_Burn_v2_rsxr_m.psarc")
+    #expect(summary.contains("extended-range"))
+
+    // Still a plain PSXR archive; only the platform-specific parts changed.
+    let macData = try Data(contentsOf: macURL)
+    #expect(Array(macData.prefix(4)) == Array("PSXR".utf8))
+    #expect(headerFlags(macData) == 0)
+    let m = try PSARCArchive(data: macData), p = try PSARCArchive(data: original)
+    #expect(m.entries.map(\.name) == p.entries.map { Platform.mac.mapPath($0.name) })
+    #expect(m.entries.contains { $0.name == "songs/bin/macos/song_lead.sng" })
+    #expect(m.entries.contains { $0.name == "audio/mac/123.wem" })
+    for sng in ["song_lead.sng", "song_rhythm.sng"] {
+        // SNGs stay plain (flags 1) and byte-identical: no Mac key, the SNXR body untouched.
+        let a = try m.read(try #require(m.entry(named: sng))), b = try p.read(try #require(p.entry(named: sng)))
+        #expect(a == b && SNG.isPlain(a))
+    }
+    #expect(try m.read(try #require(m.entry(named: ".hsan"))) == p.read(try #require(p.entry(named: ".hsan"))))
+    let graph = String(decoding: try m.read(try #require(m.entry(named: "aggregategraph.nt"))), as: UTF8.self)
+    #expect(graph.contains("\"macos\"") && graph.contains("bin/macos") && !graph.contains("dx9"))
+
+    // Mac -> PC reproduces the original byte for byte.
+    guard case .written(let pcURL, _) = try Converter.process(macURL, into: pc, options: .init(targetPlatform: .pc))
+    else { Issue.record("expected write"); return }
+    #expect(pcURL.lastPathComponent == "Nickelback_Burn_v2_rsxr_p.psarc")
+    #expect(try Data(contentsOf: pcURL) == original)
+}
+
+@Test func nativePackageNamesKeepTheRsxrTag() throws {
+    let dir = try tempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let out = dir.appendingPathComponent("out", isDirectory: true)
+    try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
+
+    // Renamed packages keep the tag, so they still read as native.
+    let a = dir.appendingPathComponent("long_name_rsxr_p.psarc")
+    try makeNativePackage(.pc).write(to: a)
+    guard case .written(let renamed, _) = try Converter.process(a, into: out, options: .init(targetPlatform: .mac, rename: .short))
+    else { Issue.record("expected write"); return }
+    #expect(renamed.lastPathComponent == "Nickelback-BurnIttoth_rsxr_m.psarc")
+    guard case .written(let renamedOnly, _) = try Converter.process(a, into: out, options: .init(rename: .full))
+    else { Issue.record("expected write"); return }
+    #expect(renamedOnly.lastPathComponent == "Nickelback-BurnIttotheGround_rsxr_p.psarc")
+
+    // A native package named without the tag gets it; a stock package never does.
+    let b = dir.appendingPathComponent("Untagged_p.psarc")
+    try makeNativePackage(.pc).write(to: b)
+    guard case .written(let tagged, _) = try Converter.process(b, into: out, options: .init(targetPlatform: .mac))
+    else { Issue.record("expected write"); return }
+    #expect(tagged.lastPathComponent == "Untagged_rsxr_m.psarc")
+    let c = dir.appendingPathComponent("Stock_rsxr_p.psarc")
+    try makePackage(.pc).write(to: c)
+    guard case .written(let stock, _) = try Converter.process(c, into: out, options: .init(targetPlatform: .mac))
+    else { Issue.record("expected write"); return }
+    #expect(stock.lastPathComponent == "Stock_rsxr_m.psarc")
+    #expect(try Data(contentsOf: stock).prefix(4) == Data("PSAR".utf8))
+}
+
+@Test func plainStockPackageStaysPlain() throws {
+    // DotCharter's earlier plain exports: PSAR magic, plain table of contents, plain SNGs.
+    let dir = try tempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let src = dir.appendingPathComponent("Plain_p.psarc")
+    let original = try makeNativePackage(.pc, magic: "PSAR")
+    try original.write(to: src)
+    let out = dir.appendingPathComponent("out", isDirectory: true)
+    try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
+    guard case .written(let macURL, _) = try Converter.process(src, into: out, options: .init(targetPlatform: .mac, appID: "221680"))
+    else { Issue.record("expected write"); return }
+    #expect(macURL.lastPathComponent == "Plain_m.psarc")
+    let data = try Data(contentsOf: macURL)
+    #expect(Array(data.prefix(4)) == Array("PSAR".utf8) && headerFlags(data) == 0)
+    let m = try PSARCArchive(data: data)
+    #expect(try SNG.isPlain(m.read(try #require(m.entry(named: "song_lead.sng")))))
+    #expect(String(bytes: try m.read(try #require(m.entry(named: "appid"))), encoding: .utf8) == "221680")
+}
+
+@Test func damagedPlainSNGIsAnError() throws {
+    var sng = try plainSNG((0..<5000).map { UInt8(truncatingIfNeeded: $0) })
+    sng[30] ^= 0xFF
+    #expect(throws: (any Error).self) { try SNG.validatePlain(sng) }
+    #expect(throws: (any Error).self) { try SNG.validatePlain(Array(sng.prefix(40))) }
+}

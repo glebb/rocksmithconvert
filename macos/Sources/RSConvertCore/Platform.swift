@@ -74,9 +74,37 @@ extension [UInt8] {
 
 /// SNG files are AES-256-CTR encrypted with a per-platform key:
 /// `[u32 magic=74][u32 flags=3][16 byte IV][ciphertext: u32 length + zlib][56 byte signature]`.
+///
+/// A plain SNG (flags 1: compressed, not encrypted, zero IV and signature) has
+/// no key, so it is the same file on both platforms. RS Extended Range native
+/// packages and DotCharter's plain exports use it; the game needs a mod for it
+/// (on RS Re-ARMed: Plain Packages).
 enum SNG {
     static let headerSize = 24
     static let maxDecompressed = 64 << 20
+    static let magic: UInt32 = 74
+    static let flagsPlain: UInt32 = 1
+
+    /// True when the wrapper says compressed and not encrypted (flags 1).
+    static func isPlain(_ sng: [UInt8]) -> Bool {
+        sng.count >= 8 && le32(sng, 0) == magic && le32(sng, 4) == flagsPlain
+    }
+
+    /// Checks that a plain SNG's zlib stream inflates to its declared size, so a
+    /// damaged chart is reported instead of copied. The bytes are kept as they are.
+    static func validatePlain(_ sng: [UInt8]) throws {
+        guard sng.count > headerSize + 4 + 56 else { throw PSARCError.corrupt("plain SNG too short") }
+        let length = Int(le32(sng, headerSize))
+        guard length <= maxDecompressed else { throw PSARCError.corrupt("SNG declares \(length) bytes") }
+        let inflated = try sng.withUnsafeBytes {
+            try Zlib.inflate(UnsafeRawBufferPointer(rebasing: $0[(headerSize + 4)...]), maxOutput: length)
+        }
+        guard inflated.output.count == length else { throw PSARCError.corrupt("plain SNG length mismatch") }
+    }
+
+    private static func le32(_ b: [UInt8], _ i: Int) -> UInt32 {
+        UInt32(b[i]) | UInt32(b[i + 1]) << 8 | UInt32(b[i + 2]) << 16 | UInt32(b[i + 3]) << 24
+    }
 
     /// Returns which platform key decrypts this SNG, verified by a full decompress,
     /// plus the end offset of the encrypted payload so callers needn't decrypt again.

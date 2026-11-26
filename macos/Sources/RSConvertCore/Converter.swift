@@ -70,8 +70,12 @@ public enum Converter {
         let originalName = source.lastPathComponent
         let stem = String(originalName.dropLast(".psarc".count))
         // Undetectable platform: keep whatever suffix the original name carried.
-        let suffix = target?.fileSuffix ?? (hasPlatformSuffix(stem) ? String(originalName.suffix(8)) : ".psarc")
-        let renamedFromSuffix = needsConversion ? stripPlatformSuffix(stem) + suffix : originalName
+        var suffix = target?.fileSuffix ?? (hasPlatformSuffix(stem) ? String(originalName.suffix(8)) : ".psarc")
+        // A native package is named <name>_rsxr_p.psarc / <name>_rsxr_m.psarc, so players
+        // and tools can tell it from a stock one without opening it.
+        if archive.isNative, suffix != ".psarc" { suffix = nativeTag + suffix }
+        let renamedFromSuffix = needsConversion
+            ? stripPlatformSuffix(stem, native: archive.isNative) + suffix : originalName
         let outputName: String
         if let scheme = options.rename {
             guard let hsan = archive.entry(named: ".hsan") else { throw ConvertError.metadata("missing HSAN manifest") }
@@ -92,7 +96,9 @@ public enum Converter {
         }
 
         var actions = [String]()
-        if needsConversion, let target { actions.append("converted to \(target.displayName)") }
+        if needsConversion, let target {
+            actions.append("converted to \(target.displayName)" + (archive.isNative ? " (extended-range package)" : ""))
+        }
         if needsAppID, let id = options.appID { actions.append("App ID \(id)") }
         if options.rename != nil { actions.append("renamed") }
         if actions.isEmpty { actions.append("copied") }
@@ -123,8 +129,13 @@ public enum Converter {
                 // Zero-length SNGs exist as placeholders (e.g. RS1 compatibility packs); nothing to re-key.
                 if entry.name.hasSuffix(".sng"), entry.name.contains(source.sngDirectory), entry.length > 0 {
                     let sng = try archive.read(entry)
-                    let key = try SNG.detectKey(sng, preferred: source)
-                    payload = .bytes(try SNG.rekey(sng, from: key.platform, to: target, payloadEnd: key.payloadEnd))
+                    if SNG.isPlain(sng) {
+                        // Not encrypted, so no key to change: the chart (stock or SNXR) is kept byte for byte.
+                        try SNG.validatePlain(sng)
+                    } else {
+                        let key = try SNG.detectKey(sng, preferred: source)
+                        payload = .bytes(try SNG.rekey(sng, from: key.platform, to: target, payloadEnd: key.payloadEnd))
+                    }
                 } else if entry.name.hasSuffix("aggregategraph.nt") {
                     payload = .bytes(target.mapAggregateGraph(try archive.read(entry)))
                 }
@@ -137,7 +148,8 @@ public enum Converter {
         }
         let handle = try FileHandle(forWritingTo: url)
         defer { try? handle.close() }
-        try PSARCWriter.write(items, to: handle)
+        // A plain or native (PSXR) archive stays plain with its magic; only paths and keys are platform-specific.
+        try PSARCWriter.write(items, to: handle, format: .matching(archive))
         try handle.synchronize()
     }
 
@@ -148,8 +160,15 @@ public enum Converter {
         return l.hasSuffix("_m") || l.hasSuffix("_p")
     }
 
-    static func stripPlatformSuffix(_ stem: String) -> String {
-        hasPlatformSuffix(stem) ? String(stem.dropLast(2)) : stem
+    /// Name tag of an RS Extended Range native package, before the platform suffix.
+    static let nativeTag = "_rsxr"
+
+    /// Drops `_m`/`_p`; for a native package also the `_rsxr` before it, which the new suffix brings back.
+    static func stripPlatformSuffix(_ stem: String, native: Bool = false) -> String {
+        guard hasPlatformSuffix(stem) else { return stem }
+        let base = String(stem.dropLast(2))
+        if native, base.lowercased().hasSuffix(nativeTag) { return String(base.dropLast(nativeTag.count)) }
+        return base
     }
 
     static func isSameFile(_ a: URL, _ b: URL) -> Bool {

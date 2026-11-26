@@ -9,6 +9,7 @@ A native Swift rewrite of the Rocksmith 2014 CDLC converter. It lives in the men
 ## Features
 
 - Convert between PC (`_p.psarc`) and Mac (`_m.psarc`), or keep the platform.
+- Convert RS Extended Range native packages (7- and 8-string charts, `_rsxr_p.psarc` ↔ `_rsxr_m.psarc`) and other plain (unencrypted) packages. They stay plain, keep their `PSXR` magic and song files byte for byte; only the folder names and the aggregate graph change. See [Extended-range packages](../README.md#extended-range-7--and-8-string-packages).
 - Rename to short or full `Artist-Song` names. The rules match the 2.x app, so existing libraries keep their names.
 - Change the App ID.
 - Drop files or folders onto the window, the Dock icon or the menu bar icon, or use **File › Convert Files…** (⌘O).
@@ -67,7 +68,7 @@ swift run -c release rsconvert-cli --to mac --rename short -o ~/out file_p.psarc
 
 ## Layout
 
-- `Sources/RSConvertCore`: PSARC reader and writer, AES (CFB for the TOC, CTR for SNG), zlib, conversion and rename logic.
+- `Sources/RSConvertCore`: PSARC reader and writer (stock, plain and `PSXR` native archives), AES (CFB for the TOC, CTR for SNG), zlib, conversion and rename logic.
 - `Sources/RSConvert`: the app.
   - `AppDelegate`: menu bar item, menus, window and drop handling.
   - `AppModel`: settings and the processing queue.

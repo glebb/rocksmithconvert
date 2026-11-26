@@ -7,6 +7,7 @@ from typing import Any, Generator, Optional
 from rocksmithconvert.qt_wrapper import QtCore
 from shutil import copyfile
 from rocksmithconvert.models import ProcessModel
+from rocksmithconvert import plain_psarc
 from pathlib import Path
 from time import sleep
 import unicodedata
@@ -111,6 +112,28 @@ class _Converter:
             data = data.replace("bin/generic", "bin/macos")
         return data
 
+    def _read_package(self, filename):
+        """Returns (entries, magic): magic is set for a plain archive (an RS Extended
+        Range native PSXR package, or a plain PSAR one), None for a stock one."""
+        with open(filename, "rb") as fh:
+            magic = plain_psarc.plain_magic(fh.read(32))
+        if magic is None:
+            return self._get_content(filename), None
+        try:
+            with open(filename, "rb") as fh:
+                content, magic = plain_psarc.read(fh)
+        except ValueError as error:
+            raise ValueError(f"Unable to parse PSARC file: {filename}") from error
+        return content, magic
+
+    @staticmethod
+    def _native_name(name: str) -> str:
+        """<name>_p.psarc -> <name>_rsxr_p.psarc: native packages carry the tag in their name."""
+        lower = name.lower()
+        if lower.endswith(("_m.psarc", "_p.psarc")) and not lower[:-8].endswith("_rsxr"):
+            return name[:-8] + "_rsxr" + name[-8:]
+        return name
+
     def _get_content(self, filename):
         content = None
         psarc_class = _get_psarc_class()
@@ -131,7 +154,7 @@ class _Converter:
         _, tail = path.split(filename)
         new_name = ""
 
-        content = self._get_content(filename)
+        content, _ = self._read_package(filename)
         for fpath, data in content.items():
             if fpath.endswith(".hsan"):
                 new_name = self._create_new_filename(tail, data, renameScheme)
@@ -173,9 +196,11 @@ class _Converter:
         mac2pc, outputFilename = self._swap_platform(
             filename, processModel.targetPlatform
         )
-        content = self._get_content(filename)
+        content, plain_magic = self._read_package(filename)
 
         _, tail = path.split(outputFilename)
+        if plain_magic == plain_psarc.NATIVE_MAGIC:
+            tail = self._native_name(tail)
         new_name = None
 
         new_content = {}
@@ -210,7 +235,12 @@ class _Converter:
             raise FileExistsError(error)
 
         with open(outputFilename, "wb") as fh:
-            _get_psarc_class()().build_stream(new_content, fh)
+            if plain_magic:
+                # Plain SNGs have no platform key: they are copied as they are, and the
+                # archive keeps its magic (PSXR for a native package) and plain table.
+                plain_psarc.write(new_content, fh, plain_magic)
+            else:
+                _get_psarc_class()().build_stream(new_content, fh)
 
         if processModel.appId != "Disabled":
             self.signals.info.emit(f"App id set to {processModel.appId} for {path.basename(outputFilename)}")
@@ -248,7 +278,10 @@ class _Converter:
             song = sub("[^A-Za-z]+", "", song)[:max_song_length]
         if dd:
             song += "DD"
-        short_name = f"{artist}-{song}" + original[-8:]
+        suffix = original[-8:]
+        if original.lower()[:-8].endswith("_rsxr"):
+            suffix = original[-13:]  # keep the RS Extended Range native tag
+        short_name = f"{artist}-{song}" + suffix
         keepcharacters = (".", "_", "-")
         short_name = (
             unicodedata.normalize("NFKD", short_name).encode("ASCII", "ignore").decode()

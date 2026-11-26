@@ -13,6 +13,7 @@ The app is based on 0x0L's pyrocksmith: https://github.com/0x0L/rocksmith
 
 - Drag and drop one or more `.psarc` files into the app.
 - Convert between PC (`_p.psarc`) and Mac (`_m.psarc`) packages.
+- Convert RS Extended Range extended-range packages (`_rsxr_p.psarc` / `_rsxr_m.psarc`), such as DotCharter's 7-string exports, both ways.
 - Rename files with shorter Rocksmith-friendly names.
 - Optionally set a custom app ID during conversion.
 - Watch a source folder and process new files automatically.
@@ -58,6 +59,16 @@ The exact result depends on your selected target folder, platform, rename mode, 
 - Auto-processing remembers your settings and can watch a folder for new `.psarc` files.
 - Mixed PC and Mac source files are handled based on the target platform you selected.
 - Rename mode exists mainly to avoid Rocksmith issues with long or unusual CDLC filenames.
+
+### Extended-range (7- and 8-string) packages
+
+[RS Extended Range](https://github.com/SomeeName/rs-extended-range) charts with more strings than stock (7- or 8-string guitar, 5- or 6-string bass) come in its native format: a `<name>_rsxr_p.psarc` package with the magic `PSXR` instead of `PSAR`, an unencrypted table of contents and unencrypted song files (SNG flags 1). See its [NATIVE-FORMAT.md](https://github.com/SomeeName/rs-extended-range/blob/main/docs/release/NATIVE-FORMAT.md).
+
+- Converting such a package gives `<name>_rsxr_m.psarc` for Mac, and the reverse for PC. Only the platform-specific parts change: the song file and audio folders (`songs/bin/generic` / `songs/bin/macos`, `audio/windows` / `audio/mac`) and the graphics tag in the aggregate graph.
+- The package stays plain, with the `PSXR` magic. Its song files are not encrypted, so there is no platform key to change: every chart, including the stock 6-string and 4-string ones in the same package, is copied byte for byte.
+- Renamed packages keep the `_rsxr` tag, and a `PSXR` package named without it gets it.
+- Plain packages with the stock `PSAR` magic (DotCharter's earlier unencrypted exports) are converted the same way and also stay plain.
+- The game only lists such a package with a mod that reads it: RS Extended Range on Windows, or on RS Re-ARMed the Seven-String Guitar and Plain Packages mods.
 
 ## Development
 
@@ -249,6 +260,7 @@ If you want to compare package size across build variants, use `du -sh dist/RSCo
 
 - `src/rocksmithconvert/controllers.py`: main window controller and signal wiring
 - `src/rocksmithconvert/services.py`: conversion, worker threads, and file processing
+- `src/rocksmithconvert/plain_psarc.py`: reader and writer for plain and RS Extended Range native (`PSXR`) archives, which pyrocksmith does not handle
 - `src/rocksmithconvert/models.py`: process model passed into workers
 - `src/rocksmithconvert/settings.py`: persistent UI settings
 - `tests/`: controller and GUI behavior tests

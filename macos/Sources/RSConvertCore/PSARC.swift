@@ -19,6 +19,11 @@ public enum PSARCError: Error, LocalizedError, Equatable {
 
 /// Read-only view of a Rocksmith 2014 PSARC archive.
 ///
+/// Besides the stock archive (magic `PSAR`, encrypted table of contents) this
+/// reads plain archives, whose table of contents is not encrypted, and RS
+/// Extended Range "native" packages, which are plain archives with the magic
+/// `PSXR` (docs/release/NATIVE-FORMAT.md in github.com/SomeeName/rs-extended-range).
+///
 /// The file is memory-mapped, so opening is cheap and only the bytes actually
 /// touched are paged in. Every size and offset read from the file is checked
 /// against the file length before use; the archive is untrusted input.
@@ -32,6 +37,8 @@ public final class PSARCArchive: Sendable {
     }
 
     static let magic: [UInt8] = Array("PSAR".utf8)
+    /// RS Extended Range native package: a plain archive holding N-string charts.
+    static let nativeMagic: [UInt8] = Array("PSXR".utf8)
     static let version: UInt32 = 0x0001_0004
     static let compression: [UInt8] = Array("zlib".utf8)
     static let entrySize = 30
@@ -46,6 +53,13 @@ public final class PSARCArchive: Sendable {
     let data: Data
     let zLengths: [UInt16]
     public let entries: [Entry]
+    /// The first four bytes: `PSAR`, or `PSXR` for an RS Extended Range native package.
+    let fileMagic: [UInt8]
+    /// False for a plain archive (header flags without 4).
+    let tocEncrypted: Bool
+
+    /// True for an RS Extended Range native package (magic `PSXR`).
+    public var isNative: Bool { fileMagic == Self.nativeMagic }
 
     public convenience init(url: URL) throws {
         let data: Data
@@ -65,7 +79,9 @@ public final class PSARCArchive: Sendable {
         self.data = data
         guard data.count >= 32 else { throw PSARCError.notPSARC }
         let header = [UInt8](data.prefix(32))
-        guard Array(header[0..<4]) == Self.magic else { throw PSARCError.notPSARC }
+        let fileMagic = Array(header[0..<4])
+        guard fileMagic == Self.magic || fileMagic == Self.nativeMagic else { throw PSARCError.notPSARC }
+        self.fileMagic = fileMagic
         guard header.be32(4) == Self.version, Array(header[8..<12]) == Self.compression else {
             throw PSARCError.unsupported("version or compression")
         }
@@ -84,7 +100,8 @@ public final class PSARCArchive: Sendable {
         }
 
         var toc = [UInt8](data[32..<tocSize])
-        if flags & Self.flagEncryptedTOC != 0 { try TOCCipher.decrypt(&toc) }
+        tocEncrypted = flags & Self.flagEncryptedTOC != 0
+        if tocEncrypted { try TOCCipher.decrypt(&toc) }
 
         let zCount = (toc.count - count * entrySize) / 2
         var zLengths = [UInt16]()
@@ -201,7 +218,20 @@ enum PSARCWriter {
         var passthrough: (PSARCArchive, Range<Int>)?
     }
 
-    static func write(_ items: [Item], to handle: FileHandle) throws {
+    /// Layout choices that the converter carries over from the source archive.
+    struct Format {
+        var magic = PSARCArchive.magic
+        var encryptTOC = true
+
+        static let stock = Format()
+
+        /// Same magic and table-of-contents encryption as `archive`.
+        static func matching(_ archive: PSARCArchive) -> Format {
+            Format(magic: archive.fileMagic, encryptTOC: archive.tocEncrypted)
+        }
+    }
+
+    static func write(_ items: [Item], to handle: FileHandle, format: Format = .stock) throws {
         let listing = Array(items.map(\.name).joined(separator: "\n").utf8)
         var prepared = [try prepare(name: "", bytes: listing)]
         for item in items {
@@ -232,16 +262,16 @@ enum PSARCWriter {
             zIndex += p.zLengths.count
         }
         for p in prepared { for z in p.zLengths { toc.appendBE(UInt64(z), bytes: 2) } }
-        try TOCCipher.encrypt(&toc)
+        if format.encryptTOC { try TOCCipher.encrypt(&toc) }
 
-        var header = PSARCArchive.magic
+        var header = format.magic
         header.appendBE(UInt64(PSARCArchive.version), bytes: 4)
         header += PSARCArchive.compression
         header.appendBE(UInt64(tocSize), bytes: 4)
         header.appendBE(UInt64(PSARCArchive.entrySize), bytes: 4)
         header.appendBE(UInt64(prepared.count), bytes: 4)
         header.appendBE(UInt64(PSARCArchive.blockSize), bytes: 4)
-        header.appendBE(UInt64(PSARCArchive.flagEncryptedTOC), bytes: 4)
+        header.appendBE(UInt64(format.encryptTOC ? PSARCArchive.flagEncryptedTOC : 0), bytes: 4)
 
         try handle.write(contentsOf: header + toc)
         for p in prepared {
