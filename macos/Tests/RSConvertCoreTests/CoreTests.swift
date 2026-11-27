@@ -521,7 +521,7 @@ func headerFlags(_ data: Data) -> UInt32 { [UInt8](data.prefix(32)).be32(28) }
     guard case .written(let macURL, let summary) = try Converter.process(src, into: mac, options: .init(targetPlatform: .mac))
     else { Issue.record("expected write"); return }
     #expect(macURL.lastPathComponent == "Nickelback_Burn_v2_rsxr_m.psarc")
-    #expect(summary.contains("extended-range"))
+    #expect(summary.contains("extended range: Lead 7-string"), "\(summary)")
 
     // Still a plain PSXR archive; only the platform-specific parts changed.
     let macData = try Data(contentsOf: macURL)

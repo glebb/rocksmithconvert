@@ -289,3 +289,35 @@ func realSevenStringPackageWithFiveStringBass() throws {
 func realEightStringPackage() throws {
     try checkRealPackage(fearFactory, extended: ["_lead.sng": (8, false)])
 }
+
+// The activity line names what an extended-range package holds, from its HSAN manifest
+@Test func extendedRangeSummaryNamesTheArrangements() throws {
+    func hsan(_ arrangements: [(String, Int, Bool)]) -> [UInt8] {
+        var entries: [String: Any] = [:]
+        for (i, (name, strings, extended)) in arrangements.enumerated() {
+            var a: [String: Any] = ["ArrangementName": name,
+                                    "Tuning": Dictionary(uniqueKeysWithValues: (0..<strings).map { ("string\($0)", 0) })]
+            if extended { a["ExtendedRange"] = ["Version": 1] }
+            entries["id\(i)"] = ["Attributes": a]
+        }
+        return Array(try! JSONSerialization.data(withJSONObject: ["Entries": entries]))
+    }
+    #expect(ExtendedRange.summary(fromHSAN: hsan([("Bass", 5, true), ("Rhythm", 6, true), ("Lead", 7, true)]))
+            == "Lead 7-string, Bass 5-string")
+    #expect(ExtendedRange.summary(fromHSAN: hsan([("Bass", 6, true), ("Lead", 8, true)])) == "Lead 8-string, Bass 6-string")
+    #expect(ExtendedRange.summary(fromHSAN: hsan([("Lead", 6, false), ("Bass", 4, false)])) == nil)
+    #expect(ExtendedRange.summary(fromHSAN: hsan([("Lead", 6, true), ("Bass", 4, true)])) == nil)
+    #expect(ExtendedRange.summary(fromHSAN: Array("not json".utf8)) == nil)
+}
+
+@Test(.enabled(if: realSample(nickelback) != nil && realSample(fearFactory) != nil))
+func realPackagesNameTheirExtendedArrangements() throws {
+    let dir = try tempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    for (name, want) in [(nickelback, "extended range: Lead 7-string, Bass 5-string"), (fearFactory, "extended range: Lead 8-string")] {
+        let result = try Converter.process(try #require(realSample(name)), into: dir,
+                                           options: ConvertOptions(targetPlatform: .mac, overwrite: true))
+        guard case .written(_, let summary) = result else { Issue.record("\(name) not written"); continue }
+        #expect(summary.contains(want), "\(summary)")
+    }
+}

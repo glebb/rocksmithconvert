@@ -97,10 +97,16 @@ public enum Converter {
             return .skipped(destination, reason: "already exists")
         }
 
+        // What an extended-range package holds ("Lead 7-string, Bass 5-string"), from its HSAN manifest
+        var extended: String?
+        if let hsan = archive.entry(named: ".hsan") {
+            extended = ExtendedRange.summary(fromHSAN: try archive.read(hsan, maxSize: 16 << 20))
+        }
         var actions = [String]()
         if needsConversion, let target {
-            actions.append("converted to \(target.displayName)" + (archive.isNative ? " (extended-range package)" : ""))
+            actions.append("converted to \(target.displayName)" + (archive.isNative && extended == nil ? " (extended-range package)" : ""))
         }
+        if let extended { actions.append("extended range: \(extended)") }
         if needsAppID, let id = options.appID { actions.append("App ID \(id)") }
         if options.rename != nil { actions.append("renamed") }
         if actions.isEmpty { actions.append("copied") }

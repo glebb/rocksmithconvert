@@ -9,7 +9,7 @@ A native Swift rewrite of the Rocksmith 2014 CDLC converter. It lives in the men
 ## Features
 
 - Convert between PC (`_p.psarc`) and Mac (`_m.psarc`), or keep the platform.
-- Convert RS Extended Range native packages (7- and 8-string guitar, 5- and 6-string bass, `_rsxr_p.psarc` ↔ `_rsxr_m.psarc`) and other plain (unencrypted) packages. They stay plain, keep their `PSXR` magic and song files byte for byte; only the folder names and the aggregate graph change. Renames keep the `_rsxr` tag. See [Extended-range packages](../README.md#extended-range-packages).
+- Convert RS Extended Range native packages (7- and 8-string guitar, 5- and 6-string bass, `_rsxr_p.psarc` ↔ `_rsxr_m.psarc`) and other plain (unencrypted) packages. They stay plain, keep their `PSXR` magic and song files byte for byte; only the folder names and the aggregate graph change. Renames keep the `_rsxr` tag. The activity list names what such a package holds, from its manifest: "converted to Mac, extended range: Lead 7-string, Bass 5-string". See [Extended-range packages](../README.md#extended-range-packages).
 - Rename to short or full `Artist-Song` names. The rules match the 2.x app, so existing libraries keep their names.
 - Change the App ID.
 - Drop files or folders onto the window, the Dock icon or the menu bar icon, or use **File › Convert Files…** (⌘O).
