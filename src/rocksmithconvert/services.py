@@ -19,6 +19,12 @@ def _get_psarc_class():
     return PSARC
 
 
+def _get_sng_crypto():
+    from rocksmith import crypto  # type: ignore[import-untyped]
+
+    return crypto
+
+
 class _WorkerSignals(QtCore.QObject):
     update = QtCore.pyqtSignal(dict)
     info = QtCore.pyqtSignal(str)
@@ -114,7 +120,8 @@ class _Converter:
 
     def _read_package(self, filename):
         """Returns (entries, magic): magic is set for a plain archive (an RS Extended
-        Range native PSXR package, or a plain PSAR one), None for a stock one."""
+        Range native PSXR package, or a plain PSAR one), None for a stock one.
+        SNG entries are returned as stored (not decrypted); see _convert_sng."""
         with open(filename, "rb") as fh:
             magic = plain_psarc.plain_magic(fh.read(32))
         if magic is None:
@@ -135,18 +142,46 @@ class _Converter:
         return name
 
     def _get_content(self, filename):
-        content = None
-        psarc_class = _get_psarc_class()
+        """Reads a stock archive (encrypted table of contents); SNGs stay as stored."""
         try:
             with open(filename, "rb") as fh:
-                content = psarc_class(True).parse_stream(fh)
-        except Exception:
+                return _get_psarc_class()(False).parse_stream(fh)
+        except Exception as error:
+            raise ValueError(f"Unable to parse PSARC file: {filename}") from error
+
+    @staticmethod
+    def _convert_sng(filepath: str, data: bytes, mac2pc: bool) -> bytes:
+        """Returns the SNG for the target platform.
+
+        Each SNG is handled on its own, whatever the archive's table of contents:
+        a plain SNG (flags 1, RS Extended Range and DotCharter) has no key and is
+        kept byte for byte; an empty placeholder is kept; an encrypted one is
+        decrypted with the key of its folder (or the other platform's, for a
+        mislabelled package) and encrypted with the target's key."""
+        if not data:
+            return data
+        if plain_psarc.sng_is_plain(data):
             try:
-                with open(filename, "rb") as fh:
-                    content = psarc_class(False).parse_stream(fh)
-            except Exception as second_error:
-                raise ValueError(f"Unable to parse PSARC file: {filename}") from second_error
-        return content
+                plain_psarc.check_plain_sng(data)
+            except ValueError as error:
+                raise ValueError(f"{filepath}: {error}") from None
+            return data
+        crypto = _get_sng_crypto()
+        source = crypto.MAC_KEY if "songs/bin/macos/" in filepath else crypto.WIN_KEY
+        other = crypto.WIN_KEY if source is crypto.MAC_KEY else crypto.MAC_KEY
+        for key in (source, other):
+            try:
+                body = crypto.decrypt_sng(data, key)
+                break
+            except Exception:
+                continue
+        else:
+            raise ValueError(f"{filepath}: SNG cannot be decrypted with either platform key")
+        return crypto.encrypt_sng(body, crypto.WIN_KEY if mac2pc else crypto.MAC_KEY)
+
+    @staticmethod
+    def _valid_app_id(app_id: str) -> bool:
+        return 1 <= len(app_id) <= 10 and app_id.isascii() and app_id.isdigit()
 
     def _do_rename(
         self, filename: str, output_directory: str, renameScheme: str
@@ -154,7 +189,9 @@ class _Converter:
         _, tail = path.split(filename)
         new_name = ""
 
-        content, _ = self._read_package(filename)
+        content, magic = self._read_package(filename)
+        if magic == plain_psarc.NATIVE_MAGIC:
+            tail = self._native_name(tail)
         for fpath, data in content.items():
             if fpath.endswith(".hsan"):
                 new_name = self._create_new_filename(tail, data, renameScheme)
@@ -196,6 +233,14 @@ class _Converter:
         mac2pc, outputFilename = self._swap_platform(
             filename, processModel.targetPlatform
         )
+        app_id = None
+        if processModel.appId != "Disabled":
+            app_id = processModel.appId.strip()
+            if not self._valid_app_id(app_id):
+                # An empty or non-numeric ID would replace the package's App ID with junk.
+                error = f"App ID must be 1-10 digits, not {processModel.appId!r}: {path.basename(filename)}"
+                self.signals.info.emit(error)
+                raise ValueError(error)
         content, plain_magic = self._read_package(filename)
 
         _, tail = path.split(outputFilename)
@@ -205,15 +250,17 @@ class _Converter:
 
         new_content = {}
         for filepath, data in content.items():
-            if filepath.endswith("aggregategraph.nt"):
+            if filepath.endswith(".sng") and ("songs/bin/macos/" in filepath or "songs/bin/generic/" in filepath):
+                data = self._convert_sng(filepath, data, mac2pc)
+            elif filepath.endswith("aggregategraph.nt"):
                 data = self._convert(data.decode(), mac2pc)
                 if mac2pc:
                     data = data.replace("macos", "dx9").encode("utf8")
                 else:
                     data = data.replace("dx9", "macos").encode("utf8")
             new_content[self._convert(filepath, mac2pc)] = data
-            if processModel.appId != "Disabled" and filepath.endswith("appid"):
-                new_content[filepath] = processModel.appId.encode("utf8")
+            if app_id is not None and filepath.endswith("appid"):
+                new_content[self._convert(filepath, mac2pc)] = app_id.encode("utf8")
             if (
                 processModel.renameScheme != "Disabled"
                 and not new_name
@@ -236,14 +283,14 @@ class _Converter:
 
         with open(outputFilename, "wb") as fh:
             if plain_magic:
-                # Plain SNGs have no platform key: they are copied as they are, and the
-                # archive keeps its magic (PSXR for a native package) and plain table.
+                # The archive keeps its magic (PSXR for a native package) and plain table.
                 plain_psarc.write(new_content, fh, plain_magic)
             else:
-                _get_psarc_class()().build_stream(new_content, fh)
+                # SNGs are already encrypted for the target by _convert_sng.
+                _get_psarc_class()(False).build_stream(new_content, fh)
 
-        if processModel.appId != "Disabled":
-            self.signals.info.emit(f"App id set to {processModel.appId} for {path.basename(outputFilename)}")
+        if app_id is not None:
+            self.signals.info.emit(f"App id set to {app_id} for {path.basename(outputFilename)}")
         return outputFilename
 
     def _find_by_key(self, data: dict, target: str) -> Generator[Any, Any, Any]:

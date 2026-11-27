@@ -8,12 +8,15 @@ encrypted table of contents). Two kinds of package are plain instead:
   github.com/SomeeName/rs-extended-range);
 - DotCharter's earlier plain exports, with the stock magic.
 
-Their SNG entries are plain too (flags 1: compressed, not encrypted), so they
-have no platform key: a PC <-> Mac conversion only renames paths and edits the
-aggregate graph. This module reads such an archive into ``{name: bytes}`` and
-writes it back with the same magic and an unencrypted table of contents.
+Their SNG entries are usually plain too (flags 1: compressed, not encrypted),
+so they have no platform key: a PC <-> Mac conversion only renames paths and
+edits the aggregate graph (an encrypted SNG is still re-keyed, see
+``services._Converter._convert_sng``). This module reads such an archive into
+``{name: bytes}`` and writes it back with the same magic and an unencrypted
+table of contents.
 """
 
+import re
 import struct
 import zlib
 from hashlib import md5
@@ -26,6 +29,34 @@ ENTRY_SIZE = 30
 BLOCK_SIZE = 65536
 FLAG_ENCRYPTED_TOC = 4
 HEADER = struct.Struct(">4sI4sIIIII")
+
+
+SNG_MAGIC = 74
+SNG_FLAGS_PLAIN = 1
+SNG_HEADER_SIZE = 24  # magic, flags, 16-byte IV
+SNG_SIGNATURE_SIZE = 56
+SNG_MAX_SIZE = 64 << 20
+
+
+def sng_is_plain(sng: bytes) -> bool:
+    """True when an SNG wrapper says compressed and not encrypted (flags 1)."""
+    return len(sng) >= 8 and struct.unpack("<II", sng[:8]) == (SNG_MAGIC, SNG_FLAGS_PLAIN)
+
+
+def check_plain_sng(sng: bytes) -> None:
+    """Raises ValueError unless a plain SNG's zlib stream inflates to its declared size,
+    so a damaged chart is reported instead of copied. The bytes are kept as they are."""
+    if len(sng) <= SNG_HEADER_SIZE + 4 + SNG_SIGNATURE_SIZE:
+        raise ValueError("plain SNG too short")
+    (length,) = struct.unpack("<I", sng[SNG_HEADER_SIZE : SNG_HEADER_SIZE + 4])
+    if length > SNG_MAX_SIZE:
+        raise ValueError(f"plain SNG declares {length} bytes")
+    try:
+        body = zlib.decompressobj().decompress(sng[SNG_HEADER_SIZE + 4 :], length + 1)
+    except zlib.error as error:
+        raise ValueError(f"damaged plain SNG: {error}") from None
+    if len(body) != length:
+        raise ValueError("plain SNG length mismatch")
 
 
 def plain_magic(header: bytes) -> Optional[bytes]:
@@ -81,7 +112,7 @@ def read(stream: BinaryIO) -> Tuple[Dict[str, bytes], bytes]:
             z_index += 1
         blobs.append(bytes(out))
 
-    names = blobs[0].decode().split("\n")
+    names = re.split(r"\r\n|\r|\n", blobs[0].decode())
     if len(names) < count - 1:
         raise ValueError("damaged PSARC: file listing is too short")
     return dict(zip(names, blobs[1:])), magic
