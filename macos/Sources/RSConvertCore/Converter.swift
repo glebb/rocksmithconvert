@@ -72,10 +72,12 @@ public enum Converter {
         // Undetectable platform: keep whatever suffix the original name carried.
         var suffix = target?.fileSuffix ?? (hasPlatformSuffix(stem) ? String(originalName.suffix(8)) : ".psarc")
         // A native package is named <name>_rsxr_p.psarc / <name>_rsxr_m.psarc, so players
-        // and tools can tell it from a stock one without opening it.
-        if archive.isNative, suffix != ".psarc" { suffix = nativeTag + suffix }
+        // and tools can tell it from a stock one without opening it. A name that already
+        // carries the tag keeps it through a rename too, as in the 2.x app.
+        let tagged = archive.isNative || hasNativeTag(stem)
+        if tagged, suffix != ".psarc" { suffix = nativeTag + suffix }
         let renamedFromSuffix = needsConversion
-            ? stripPlatformSuffix(stem, native: archive.isNative) + suffix : originalName
+            ? stripPlatformSuffix(stem, native: tagged) + suffix : originalName
         let outputName: String
         if let scheme = options.rename {
             guard let hsan = archive.entry(named: ".hsan") else { throw ConvertError.metadata("missing HSAN manifest") }
@@ -162,6 +164,11 @@ public enum Converter {
 
     /// Name tag of an RS Extended Range native package, before the platform suffix.
     static let nativeTag = "_rsxr"
+
+    /// True for `<name>_rsxr_p` / `<name>_rsxr_m`.
+    static func hasNativeTag(_ stem: String) -> Bool {
+        hasPlatformSuffix(stem) && stem.dropLast(2).lowercased().hasSuffix(nativeTag)
+    }
 
     /// Drops `_m`/`_p`; for a native package also the `_rsxr` before it, which the new suffix brings back.
     static func stripPlatformSuffix(_ stem: String, native: Bool = false) -> String {
